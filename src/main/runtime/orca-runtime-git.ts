@@ -465,7 +465,8 @@ export class RuntimeGitCommands {
       return generateCommitMessageFromContext(context, resolvedSettings.params, {
         kind: 'remote',
         cwd: target.worktree.path,
-        execute: (plan, cwd, timeoutMs) => provider.executeCommitMessagePlan(plan, cwd, timeoutMs),
+        execute: (plan, cwd, timeoutMs, operation) =>
+          provider.executeCommitMessagePlan(plan, cwd, timeoutMs, operation),
         missingBinaryLocation: 'remote PATH'
       })
     }
@@ -498,7 +499,7 @@ export class RuntimeGitCommands {
     const target = await this.host.resolveRuntimeGitTarget(worktreeSelector)
     const provider = target.connectionId ? getSshGitProvider(target.connectionId) : null
     if (target.connectionId) {
-      await provider?.cancelGenerateCommitMessage(target.worktree.path)
+      await provider?.cancelGenerateCommitMessage(target.worktree.path, 'commit-message')
       return { ok: true }
     }
     cancelGenerateCommitMessageLocal(target.worktree.path)
@@ -567,7 +568,8 @@ export class RuntimeGitCommands {
       return generatePullRequestFieldsFromContext(context, resolvedSettings.params, {
         kind: 'remote',
         cwd: target.worktree.path,
-        execute: (plan, cwd, timeoutMs) => provider!.executeCommitMessagePlan(plan, cwd, timeoutMs),
+        execute: (plan, cwd, timeoutMs, operation) =>
+          provider!.executeCommitMessagePlan(plan, cwd, timeoutMs, operation),
         missingBinaryLocation: 'remote PATH'
       })
     }
@@ -590,7 +592,7 @@ export class RuntimeGitCommands {
     const target = await this.host.resolveRuntimeGitTarget(worktreeSelector)
     const provider = target.connectionId ? getSshGitProvider(target.connectionId) : null
     if (target.connectionId) {
-      await provider?.cancelGenerateCommitMessage(target.worktree.path)
+      await provider?.cancelGenerateCommitMessage(target.worktree.path, 'pull-request-fields')
       return { ok: true }
     }
     cancelGeneratePullRequestFieldsLocal(target.worktree.path)
