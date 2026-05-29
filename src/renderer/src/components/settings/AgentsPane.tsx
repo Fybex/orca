@@ -27,11 +27,16 @@ export { AGENTS_PANE_SEARCH_ENTRIES } from './agents-search'
 
 type AgentsPaneProps = {
   settings: GlobalSettings
-  updateSettings: (updates: Partial<GlobalSettings>) => void
+  updateSettings: (updates: Partial<GlobalSettings>) => void | Promise<void>
 }
 
-// Why: module-scoped so concurrent AgentRow clicks share the same chain.
-let pendingToggle: Promise<unknown> = Promise.resolve()
+type AgentAvailabilityUpdateQueueOptions = {
+  getSettings: () => GlobalSettings | null | undefined
+  fallbackSettings: GlobalSettings
+  updateSettings: AgentsPaneProps['updateSettings']
+  agentId: TuiAgent
+  enabled: boolean
+}
 
 type AgentRowProps = {
   agentId: TuiAgent
@@ -43,7 +48,7 @@ type AgentRowProps = {
   isDefault: boolean
   cmdOverride: string | undefined
   onSetDefault: () => void
-  onToggleEnabled: () => void
+  onSetEnabled: (enabled: boolean) => void
   onSaveOverride: (value: string) => void
 }
 
@@ -58,29 +63,52 @@ type AgentAvailability = 'enabled' | 'disabled'
 type AgentAvailabilityControlProps = {
   label: string
   isEnabled: boolean
-  onToggleEnabled: () => void
+  onSetEnabled: (enabled: boolean) => void
 }
 
-export function buildAgentEnabledSettingsUpdate(
+export function buildAgentAvailabilitySettingsUpdate(
   settings: Pick<GlobalSettings, 'defaultTuiAgent' | 'disabledTuiAgents'>,
-  id: TuiAgent
+  id: TuiAgent,
+  enabled: boolean
 ): Pick<GlobalSettings, 'disabledTuiAgents'> & Partial<Pick<GlobalSettings, 'defaultTuiAgent'>> {
   const latestDisabled = normalizeDisabledTuiAgents(settings.disabledTuiAgents)
-  const wasDisabled = latestDisabled.includes(id)
-  const nextDisabled = wasDisabled
+  const nextDisabled = enabled
     ? latestDisabled.filter((agent) => agent !== id)
-    : [...latestDisabled, id]
+    : latestDisabled.includes(id)
+      ? latestDisabled
+      : [...latestDisabled, id]
 
   return {
     disabledTuiAgents: nextDisabled,
-    ...(settings.defaultTuiAgent === id && !wasDisabled ? { defaultTuiAgent: null } : {})
+    ...(settings.defaultTuiAgent === id && !enabled ? { defaultTuiAgent: null } : {})
   }
 }
+
+export function createAgentAvailabilityUpdateQueue(): (
+  options: AgentAvailabilityUpdateQueueOptions
+) => Promise<void> {
+  let pendingUpdate: Promise<unknown> = Promise.resolve()
+
+  return ({ getSettings, fallbackSettings, updateSettings, agentId, enabled }) => {
+    // Why: serialize full-array replacements so each write sees the store after
+    // the previous IPC has reconciled, while preserving the user's requested state.
+    pendingUpdate = pendingUpdate
+      .catch(() => {})
+      .then(() =>
+        updateSettings(
+          buildAgentAvailabilitySettingsUpdate(getSettings() ?? fallbackSettings, agentId, enabled)
+        )
+      )
+    return pendingUpdate.then(() => undefined)
+  }
+}
+
+const enqueueAgentAvailabilityUpdate = createAgentAvailabilityUpdateQueue()
 
 export function AgentAvailabilityControl({
   label,
   isEnabled,
-  onToggleEnabled
+  onSetEnabled
 }: AgentAvailabilityControlProps): React.JSX.Element {
   const value: AgentAvailability = isEnabled ? 'enabled' : 'disabled'
 
@@ -89,7 +117,7 @@ export function AgentAvailabilityControl({
       value={value}
       onChange={(next) => {
         if (next !== value) {
-          onToggleEnabled()
+          onSetEnabled(next === 'enabled')
         }
       }}
       ariaLabel={`${label} availability`}
@@ -169,7 +197,7 @@ function AgentRow({
   isDefault,
   cmdOverride,
   onSetDefault,
-  onToggleEnabled,
+  onSetEnabled,
   onSaveOverride
 }: AgentRowProps): React.JSX.Element {
   const [cmdOpen, setCmdOpen] = useState(Boolean(cmdOverride))
@@ -215,7 +243,7 @@ function AgentRow({
           <AgentAvailabilityControl
             label={label}
             isEnabled={isEnabled}
-            onToggleEnabled={onToggleEnabled}
+            onSetEnabled={onSetEnabled}
           />
 
           {isDetected && isEnabled && (
@@ -339,13 +367,13 @@ export function AgentsPane({ settings, updateSettings }: AgentsPaneProps): React
     updateSettings({ defaultTuiAgent: id })
   }
 
-  const toggleEnabled = (id: TuiAgent): void => {
-    // Why: serialize toggles so each click computes its next disabledTuiAgents
-    // from the post-IPC store snapshot. Without this, two rapid toggles race
-    // on the full-array replacement and the second silently overwrites the first.
-    pendingToggle = pendingToggle.catch(() => {}).then(() => {
-      const latestSettings = useAppStore.getState().settings ?? settings
-      return Promise.resolve(updateSettings(buildAgentEnabledSettingsUpdate(latestSettings, id)))
+  const setAgentEnabled = (id: TuiAgent, enabled: boolean): void => {
+    void enqueueAgentAvailabilityUpdate({
+      getSettings: () => useAppStore.getState().settings,
+      fallbackSettings: settings,
+      updateSettings,
+      agentId: id,
+      enabled
     })
   }
 
@@ -460,7 +488,7 @@ export function AgentsPane({ settings, updateSettings }: AgentsPaneProps): React
                 isDefault={defaultAgent === agent.id}
                 cmdOverride={cmdOverrides[agent.id]}
                 onSetDefault={() => setDefault(agent.id)}
-                onToggleEnabled={() => toggleEnabled(agent.id)}
+                onSetEnabled={(enabled) => setAgentEnabled(agent.id, enabled)}
                 onSaveOverride={(v) => saveOverride(agent.id, v)}
               />
             ))}
@@ -492,7 +520,7 @@ export function AgentsPane({ settings, updateSettings }: AgentsPaneProps): React
                 isDefault={false}
                 cmdOverride={undefined}
                 onSetDefault={() => {}}
-                onToggleEnabled={() => toggleEnabled(agent.id)}
+                onSetEnabled={(enabled) => setAgentEnabled(agent.id, enabled)}
                 onSaveOverride={() => {}}
               />
             ))}
