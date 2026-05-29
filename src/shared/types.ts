@@ -13,6 +13,7 @@ import type { WorkspaceCleanupUIState } from './workspace-cleanup'
 import type { GitLabProjectSettings } from './gitlab-types'
 import type { TaskProvider } from './task-providers'
 import type { FeatureTipId } from './feature-tips'
+import type { FeatureInteractionState } from './feature-interactions'
 import type { GitBranchChangeStatus } from './git-status-types'
 import type { KeybindingOverrides, TerminalShortcutPolicy } from './keybindings'
 import type { RepoIcon } from './repo-icon'
@@ -473,11 +474,11 @@ export type TerminalTab = {
    *  not by the user doing work. Without this flag the resulting
    *  `updateTabPtyId` call would call `bumpWorktreeActivity` and flip the
    *  sidebar's recency sort on every click — the reorder-on-click bug. The
-   *  flag is set by `setActiveWorktree` and consumed (cleared) by the first
-   *  `updateTabPtyId` that follows, which then suppresses the activity bump
-   *  and the `sortEpoch` increment. Never persisted — it is a transient
-   *  handoff between the two calls. */
-  pendingActivationSpawn?: boolean
+   *  flag is set by `setActiveWorktree` and consumed by the activation-driven
+   *  PTY lifecycle calls that follow, which then suppress activity bumps and
+   *  `sortEpoch` increments. Split layouts use a numeric count because one tab
+   *  can remount several panes. Never persisted — it is a transient handoff. */
+  pendingActivationSpawn?: boolean | number
 }
 
 export type BrowserHistoryEntry = {
@@ -1811,6 +1812,9 @@ export type GlobalSettings = {
    *  - 'blank': blank terminal (no agent launched)
    *  - TuiAgent: a specific agent id */
   defaultTuiAgent: TuiAgent | 'blank' | null
+  /** Agents hidden from future picker and automatic launch choices. Detection
+   *  remains a raw PATH capability snapshot. */
+  disabledTuiAgents: TuiAgent[]
   /** Why: worktree deletion is destructive (git worktree remove + rm -rf of the
    *  working directory), so Orca shows a confirmation dialog by default. Users
    *  who delete frequently can opt into skipping the dialog via a "Don't ask
@@ -1906,6 +1910,9 @@ export type GlobalSettings = {
    *  and agent-completion events. Opt-in while the signal/noise balance is
    *  being tested. */
   experimentalTerminalAttention: boolean
+  /** Experimental: compact worktree cards by hiding a redundant metadata row
+   *  when the title and branch already say the same thing. */
+  experimentalCompactWorktreeCards: boolean
   /** Experimental: when creating a worktree, automatically symlink a
    *  user-configured set of files/folders from the primary checkout (e.g.
    *  `.env`, `node_modules`) into the new worktree. Opt-in while the
@@ -2309,6 +2316,9 @@ export type PersistedUIState = {
   /** Feature tips already surfaced to the user. Startup only opens the tips
    *  modal when this list is missing one of the current tip ids. */
   featureTipsSeenIds?: FeatureTipId[]
+  /** Local product-state facts: feature ids the user has actually used.
+   *  Used by education surfaces to avoid teaching already-discovered features. */
+  featureInteractions?: FeatureInteractionState
 }
 
 export const PET_SIZE_MIN = 60

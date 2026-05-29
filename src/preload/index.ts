@@ -989,6 +989,7 @@ const api = {
       limit?: number
       query?: string
       before?: string
+      noCache?: boolean
     }): Promise<ListWorkItemsResult<Omit<GitHubWorkItem, 'repoId'>>> =>
       ipcRenderer.invoke('gh:listWorkItems', args),
 
@@ -2198,6 +2199,8 @@ const api = {
       ipcRenderer.invoke('git:conflictOperation', args),
     abortMerge: (args: { worktreePath: string; connectionId?: string }): Promise<void> =>
       ipcRenderer.invoke('git:abortMerge', args),
+    abortRebase: (args: { worktreePath: string; connectionId?: string }): Promise<void> =>
+      ipcRenderer.invoke('git:abortRebase', args),
     diff: (args: {
       worktreePath: string
       filePath: string
@@ -2328,6 +2331,8 @@ const api = {
   ui: {
     get: (): Promise<unknown> => ipcRenderer.invoke('ui:get'),
     set: (args: Record<string, unknown>): Promise<void> => ipcRenderer.invoke('ui:set', args),
+    recordFeatureInteraction: (id: string): Promise<unknown> =>
+      ipcRenderer.invoke('ui:recordFeatureInteraction', id),
     onOpenSettings: (callback: () => void): (() => void) => {
       const listener = (_event: Electron.IpcRendererEvent) => callback()
       ipcRenderer.on('ui:openSettings', listener)

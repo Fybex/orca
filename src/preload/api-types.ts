@@ -115,6 +115,7 @@ import type { GitHistoryOptions, GitHistoryResult } from '../shared/git-history'
 import type { PublicKnownRuntimeEnvironment } from '../shared/runtime-environments'
 import type { RuntimeAccessGrant } from '../shared/runtime-access-grants'
 import type { RuntimeRpcResponse } from '../shared/runtime-rpc-envelope'
+import type { FeatureInteractionId } from '../shared/feature-interactions'
 import type {
   AddIssueCommentBySlugArgs,
   ClearProjectItemFieldArgs,
@@ -935,6 +936,7 @@ export type PreloadApi = {
       limit?: number
       query?: string
       before?: string
+      noCache?: boolean
     }) => Promise<ListWorkItemsResult<Omit<GitHubWorkItem, 'repoId'>>>
     prChecks: (args: {
       repoPath: string
@@ -1613,6 +1615,7 @@ export type PreloadApi = {
       connectionId?: string
     }) => Promise<GitConflictOperation>
     abortMerge: (args: { worktreePath: string; connectionId?: string }) => Promise<void>
+    abortRebase: (args: { worktreePath: string; connectionId?: string }) => Promise<void>
     diff: (args: {
       worktreePath: string
       filePath: string
@@ -1767,6 +1770,7 @@ export type PreloadApi = {
   ui: {
     get: () => Promise<PersistedUIState>
     set: (args: Partial<PersistedUIState>) => Promise<void>
+    recordFeatureInteraction: (id: FeatureInteractionId) => Promise<PersistedUIState>
     onOpenSettings: (callback: () => void) => () => void
     onOpenFeatureTour: (callback: () => void) => () => void
     onOpenCrashReport: (callback: () => void) => () => void

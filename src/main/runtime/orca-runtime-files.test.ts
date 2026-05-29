@@ -8,6 +8,7 @@ import type * as FilesystemAuth from '../ipc/filesystem-auth'
 
 const {
   lstatMock,
+  readdirMock,
   renameMock,
   resolveAuthorizedPathMock,
   statMock,
@@ -15,6 +16,7 @@ const {
   watchMock
 } = vi.hoisted(() => ({
   lstatMock: vi.fn(),
+  readdirMock: vi.fn(),
   renameMock: vi.fn(),
   resolveAuthorizedPathMock: vi.fn(),
   statMock: vi.fn(),
@@ -35,6 +37,7 @@ vi.mock('fs/promises', async () => {
   return {
     ...actual,
     lstat: lstatMock,
+    readdir: readdirMock,
     rename: renameMock,
     stat: statMock
   }
@@ -69,6 +72,14 @@ function mockStats(dev: number, ino: number) {
   return { dev, ino, isDirectory: () => false }
 }
 
+function dirEntry(args: { name: string; directory?: boolean; symlink?: boolean }) {
+  return {
+    name: args.name,
+    isDirectory: () => args.directory ?? false,
+    isSymbolicLink: () => args.symlink ?? false
+  }
+}
+
 function createRuntimeFileCommands() {
   const store = {
     getRepo: vi.fn((_repoId?: string) => undefined as { connectionId?: string } | undefined)
@@ -93,11 +104,13 @@ describe('RuntimeFileCommands', () => {
   beforeEach(() => {
     vi.useFakeTimers()
     lstatMock.mockReset()
+    readdirMock.mockReset()
     renameMock.mockReset()
     resolveAuthorizedPathMock.mockReset()
     statMock.mockReset()
     subscribeParcelWatcherMock.mockReset()
     watchMock.mockReset()
+    readdirMock.mockResolvedValue([])
     lstatMock.mockRejectedValue(enoent())
     renameMock.mockResolvedValue(undefined)
     Object.defineProperty(process, 'platform', {
@@ -139,6 +152,23 @@ describe('RuntimeFileCommands', () => {
       kind: 'markdown',
       opened: true
     })
+  })
+
+  it('does not follow symlinks when reading runtime-local file explorer dirs', async () => {
+    const { commands } = createRuntimeFileCommands()
+    resolveAuthorizedPathMock.mockResolvedValue('/repo')
+    readdirMock.mockResolvedValue([
+      dirEntry({ name: 'README.md' }),
+      dirEntry({ name: 'linked-docs', directory: true, symlink: true })
+    ])
+
+    const result = await commands.readFileExplorerDir('id:wt-1', '')
+
+    expect(result).toEqual([
+      { name: 'linked-docs', isDirectory: false, isSymlink: true },
+      { name: 'README.md', isDirectory: false, isSymlink: false }
+    ])
+    expect(statMock).not.toHaveBeenCalledWith('/repo/linked-docs')
   })
 
   it('renames a runtime-local file when destination does not exist', async () => {
@@ -293,7 +323,7 @@ describe('RuntimeFileCommands', () => {
   })
 
   it('tracks native Parcel watcher unsubscribe work so shutdown can await it', async () => {
-    const store = { getRepo: vi.fn(() => undefined) }
+    const { commands } = createRuntimeFileCommands()
     resolveAuthorizedPathMock.mockResolvedValue('/repo')
     statMock.mockResolvedValue({ isDirectory: () => true })
     let resolveUnsubscribe: () => void = () => {}
@@ -304,18 +334,6 @@ describe('RuntimeFileCommands', () => {
         })
     )
     subscribeParcelWatcherMock.mockResolvedValue({ unsubscribe: unsubscribeMock })
-
-    const commands = new RuntimeFileCommands({
-      getRuntimeId: () => 'runtime-1',
-      requireStore: () => store,
-      resolveWorktreeSelector: vi.fn(async () => ({
-        id: 'wt-1',
-        repoId: 'repo-1',
-        path: '/repo'
-      })),
-      resolveRuntimeGitTarget: vi.fn(),
-      openFile: vi.fn()
-    } as never)
 
     const unsubscribe = await commands.watchFileExplorer('id:wt-1', vi.fn())
     unsubscribe()
