@@ -189,5 +189,28 @@ export const getSidebarEntries = createLocalizedCatalog((): SettingsSearchEntry[
   },
   getWorkspaceCardLayoutEntry(),
   getLeftSidebarAppearanceEntry(),
-  getShowPinnedWorktreesInGroupsEntry()
+  getShowPinnedWorktreesInGroupsEntry(),
+  getQuietProjectGroupsEntry()
 ])
+
+export const getQuietProjectGroupsEntry = createLocalizedCatalog((): SettingsSearchEntry => ({
+  title: translate(
+    'auto.components.settings.appearance.search.quietProjectGroups.title',
+    'Quiet project groups'
+  ),
+  description: translate(
+    'auto.components.settings.appearance.search.quietProjectGroups.description',
+    'Inside project groups, hide primary checkouts and fold projects with no other worktree into one line.'
+  ),
+  keywords: [
+    ...translateSearchKeyword('auto.components.settings.appearance.search.5bff6a2ef0', 'sidebar'),
+    ...translateSearchKeyword(
+      'auto.components.settings.appearance.search.quietProjectGroups.group',
+      'group'
+    ),
+    ...translateSearchKeyword(
+      'auto.components.settings.appearance.search.quietProjectGroups.primary',
+      'primary'
+    )
+  ]
+}))

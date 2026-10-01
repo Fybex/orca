@@ -28,6 +28,8 @@ export type GroupHeaderRow = {
   hostWorktreeCounts?: ReadonlyMap<ExecutionHostId, number>
   hostWorktreeIds?: ReadonlyMap<ExecutionHostId, readonly string[]>
   worktreeIds?: readonly string[]
+  /** Set on a quiet group's folded "N more projects" line; inverts collapse so it starts folded. */
+  catalog?: { expanded: boolean }
 }
 
 export type WorktreeRow = {

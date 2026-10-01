@@ -24,6 +24,7 @@ import { LeftSidebarAppearanceSetting } from './LeftSidebarAppearanceSetting'
 import {
   getLeftSidebarAppearanceEntry,
   getShowPinnedWorktreesInGroupsEntry,
+  getQuietProjectGroupsEntry,
   getWorkspaceCardLayoutEntry
 } from './appearance-sidebar-search'
 import { translate } from '@/i18n/i18n'
@@ -332,6 +333,23 @@ export function AppearanceWindowSidebarSection({
                           showPinnedWorktreesInGroups: !(
                             settings.showPinnedWorktreesInGroups === true
                           )
+                        })
+                      }
+                    />
+                  </SearchableSetting>
+
+                  <SearchableSetting
+                    title={getQuietProjectGroupsEntry().title}
+                    description={getQuietProjectGroupsEntry().description}
+                    keywords={getQuietProjectGroupsEntry().keywords}
+                  >
+                    <SettingsSwitchRow
+                      label={getQuietProjectGroupsEntry().title}
+                      description={getQuietProjectGroupsEntry().description}
+                      checked={settings.quietProjectGroups !== false}
+                      onChange={() =>
+                        updateSettings({
+                          quietProjectGroups: settings.quietProjectGroups === false
                         })
                       }
                     />

@@ -172,11 +172,13 @@ export function renderWorktreeSectionHeaderRow(args: {
         projectGroupId: folderBackedProjectGroup.id
       })
     : null
-  const isHeaderCollapsed = ctx.collapsedGroups.has(row.key)
+  const isCatalogHeader = row.catalog !== undefined
+  const isHeaderCollapsed = row.catalog ? !row.catalog.expanded : ctx.collapsedGroups.has(row.key)
   // Why: repo/project/status/pinned share compact section chrome; flat "All" stays a simple label.
   const showHeaderCollapseAffordance =
-    row.count > 0 &&
-    (isRepoHeader || isProjectGroupHeader || headerWorkspaceStatus !== null || isPinnedHeader)
+    isCatalogHeader ||
+    (row.count > 0 &&
+      (isRepoHeader || isProjectGroupHeader || headerWorkspaceStatus !== null || isPinnedHeader))
   return (
     <div
       key={vItem.key}
@@ -250,7 +252,7 @@ export function renderWorktreeSectionHeaderRow(args: {
         style={{
           // Why: non-project headers like "All" are flat-list labels; don't reserve project hierarchy indent.
           paddingLeft:
-            isRepoHeader || isProjectGroupHeader
+            isRepoHeader || isProjectGroupHeader || isCatalogHeader
               ? getProjectGroupHeaderPaddingLeft(row.projectGroupDepth ?? 0)
               : WORKTREE_SECTION_HEADER_PADDING_LEFT
         }}
