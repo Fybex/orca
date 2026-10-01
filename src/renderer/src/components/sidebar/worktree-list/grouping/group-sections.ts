@@ -50,6 +50,7 @@ export type SectionAppendContext = {
   worktreeMap: Map<string, Worktree>
   nestLineage: boolean
   cyclicLineageIds: ReadonlySet<string>
+  attachedWorktreesByFolderId?: ReadonlyMap<string, Worktree[]>
 }
 
 export function appendOrderedGroups(
