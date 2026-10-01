@@ -26,7 +26,8 @@ export function ProjectGroupHeaderMenu({
   hostId,
   label,
   onRename,
-  onDelete
+  onDelete,
+  onNewFeature
 }: {
   groupId: string
   /** Owner host of the group row, so rename/delete route to the host that holds it. */
@@ -34,6 +35,8 @@ export function ProjectGroupHeaderMenu({
   label: string
   onRename: (groupId: string, currentName: string, hostId?: ExecutionHostId) => void
   onDelete: (groupId: string, groupName: string, hostId?: ExecutionHostId) => void
+  /** Set only for local folder-backed groups; feature folders link to worktrees on this disk. */
+  onNewFeature?: () => void
 }): React.JSX.Element {
   return (
     <DropdownMenu modal={false}>
@@ -68,6 +71,11 @@ export function ProjectGroupHeaderMenu({
         onClick={stopRepoHeaderMenuEvent}
         onKeyDown={stopRepoHeaderMenuEvent}
       >
+        {onNewFeature ? (
+          <DropdownMenuItem onSelect={onNewFeature}>
+            {translate('auto.components.sidebar.WorktreeList.newFeature', 'New feature…')}
+          </DropdownMenuItem>
+        ) : null}
         <DropdownMenuItem onSelect={() => onRename(groupId, label, hostId)}>
           {translate('auto.components.sidebar.WorktreeList.4d7b73658c', 'Rename group')}
         </DropdownMenuItem>
