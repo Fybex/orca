@@ -2,7 +2,10 @@ import type { FolderWorkspace } from '../../../../../../shared/folder-workspace-
 import type { ProjectGroup } from '../../../../../../shared/project-group-types'
 import type { Repo } from '../../../../../../shared/repo-types'
 import type { ProjectOrderBy } from '../../../../../../shared/ui-chrome-types'
-import type { WorktreeLineage } from '../../../../../../shared/worktree/lineage-types'
+import type {
+  WorkspaceLineage,
+  WorktreeLineage
+} from '../../../../../../shared/worktree/lineage-types'
 import type { WorkspaceStatusDefinition, Worktree } from '../../../../../../shared/worktree/types'
 import { cloneDefaultWorkspaceStatuses } from '../../../../../../shared/workspace-statuses'
 import type { AppState } from '../../../../store/types'
@@ -33,6 +36,7 @@ import {
   compareFolderWorkspacesForDisplay,
   getRenderableFolderWorkspaces
 } from './folder-workspace-lanes'
+import { getFolderWorkspaceAttachedWorktrees } from './folder-workspace-attached-rows'
 import { getPinnedWorktreeDisplayPolicy } from './row-types'
 import type {
   ImportedWorktreesCardCandidate,
@@ -70,7 +74,8 @@ export function buildRows(
   folderWorkspaces: readonly FolderWorkspace[] = [],
   hostLabelById?: ReadonlyMap<string, string>,
   defaultHostId: ExecutionHostId = LOCAL_EXECUTION_HOST_ID,
-  pinnedDisplayPolicy: PinnedWorktreeDisplayPolicy = getPinnedWorktreeDisplayPolicy(settings)
+  pinnedDisplayPolicy: PinnedWorktreeDisplayPolicy = getPinnedWorktreeDisplayPolicy(settings),
+  workspaceLineageByChildKey: Readonly<Record<string, WorkspaceLineage>> = {}
 ): Row[] {
   const result: Row[] = []
   const projectIndex = buildProjectGroupingIndex(projectGrouping)
@@ -105,6 +110,29 @@ export function buildRows(
     pinnedDisplayPolicy === 'duplicate-in-groups'
       ? worktrees
       : worktrees.filter((worktree) => !pinnedSectionIds.has(getWorktreeHostIdentity(worktree)))
+  // Why repo grouping only: like same-repo lineage, an attached worktree renders
+  // once, under its folder workspace, instead of also under its repo.
+  const attachedWorktreesByFolderId =
+    groupBy === 'repo' && nestLineage
+      ? getFolderWorkspaceAttachedWorktrees({
+          folderWorkspaces: renderableFolderWorkspaces,
+          worktrees: naturalWorktrees,
+          workspaceLineageByChildKey,
+          lineageById,
+          worktreeMap,
+          repoMap,
+          defaultHostId
+        })
+      : new Map<string, Worktree[]>()
+  const attachedIdentities = new Set(
+    [...attachedWorktreesByFolderId.values()].flat().map(getWorktreeHostIdentity)
+  )
+  const repoSectionWorktrees =
+    attachedIdentities.size > 0
+      ? naturalWorktrees.filter(
+          (worktree) => !attachedIdentities.has(getWorktreeHostIdentity(worktree))
+        )
+      : naturalWorktrees
   // Why the full set: under the default pinned policy a pinned worktree exists
   // only in the Pinned section, and its host is part of whether the sidebar is
   // mixed at all. Scoping to naturalWorktrees left pinned remotes unlabelled.
@@ -127,7 +155,7 @@ export function buildRows(
   )
   const renderedNaturalAnchorRepoIds = getRenderedNaturalAnchorRepoIds({
     groupBy,
-    worktrees: naturalWorktrees,
+    worktrees: repoSectionWorktrees,
     repoMap,
     prCache,
     collapsedGroups,
@@ -197,7 +225,7 @@ export function buildRows(
 
   const orderedGroups = buildOrderedGroups({
     groupBy,
-    naturalWorktrees,
+    naturalWorktrees: repoSectionWorktrees,
     repoMap,
     prCache,
     settings,
@@ -229,7 +257,8 @@ export function buildRows(
     lineageById,
     worktreeMap,
     nestLineage,
-    cyclicLineageIds
+    cyclicLineageIds,
+    attachedWorktreesByFolderId
   }
 
   if (groupBy !== 'repo' || projectGroups.length === 0) {

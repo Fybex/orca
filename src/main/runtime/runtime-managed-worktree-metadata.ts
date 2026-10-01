@@ -1,6 +1,10 @@
 import type { GitPushTarget, Worktree } from '../../shared/worktree/types'
 import type { WorktreeMeta } from '../../shared/worktree/meta-types'
-import { worktreeWorkspaceKey } from '../../shared/workspace-scope'
+import {
+  folderWorkspaceKey,
+  parseWorkspaceKey,
+  worktreeWorkspaceKey
+} from '../../shared/workspace-scope'
 import { splitWorktreeId } from '../../shared/worktree/id'
 import { planWorktreeSortOrderUpdates } from '../../shared/worktree/sort-order-update'
 import { stripOrcaProvenanceMetaUpdates } from '../worktree-removal-safety'
@@ -30,6 +34,7 @@ export async function updateRuntimeManagedWorktreeMetadata(args: {
 }): Promise<Worktree> {
   const worktree = await args.ports.resolveWorktree(args.selector)
   const { lineage, ...metaUpdates } = args.updates
+  const folderParentId = lineage?.parentWorktree ? getFolderParentId(lineage.parentWorktree) : null
   if (lineage?.parentWorktree) {
     args.ports.invalidateResolved()
     args.ports.invalidateScan(worktree.repoId)
@@ -54,6 +59,8 @@ export async function updateRuntimeManagedWorktreeMetadata(args: {
   if (lineage?.noParent === true) {
     args.store.removeWorktreeLineage?.(worktree.id)
     args.store.removeWorkspaceLineage?.(worktreeWorkspaceKey(worktree.id))
+  } else if (folderParentId) {
+    attachToFolderWorkspace(args.store, worktree, folderParentId)
   } else if (lineage?.parentWorktree) {
     const parent = await args.ports.resolveWorktree(lineage.parentWorktree)
     args.ports.validateParent(worktree, parent)
@@ -100,6 +107,38 @@ export async function updateRuntimeManagedWorktreeMetadata(args: {
   args.ports.invalidateResolved()
   args.ports.notifyChanged(worktree.repoId)
   return args.ports.showWorktree(`id:${worktree.id}`)
+}
+
+function getFolderParentId(selector: string): string | null {
+  const parsed = parseWorkspaceKey(selector.startsWith('id:') ? selector.slice(3) : selector)
+  return parsed?.type === 'folder' ? parsed.folderWorkspaceId : null
+}
+
+// Why: a folder parent lives only in workspace lineage, the same record `worktree create --parent-worktree folder:` writes.
+function attachToFolderWorkspace(
+  store: RuntimeStore,
+  worktree: ResolvedWorktree,
+  folderWorkspaceId: string
+): void {
+  if (!store.getFolderWorkspaces?.().some((workspace) => workspace.id === folderWorkspaceId)) {
+    throw new RuntimeLineageError('LINEAGE_PARENT_NOT_FOUND', 'Parent selector was not found.')
+  }
+  if (!worktree.instanceId || !store.setWorkspaceLineage) {
+    throw new RuntimeLineageError(
+      'LINEAGE_PARENT_CONTEXT_MISSING',
+      'Worktree instance identity or lineage storage was unavailable.'
+    )
+  }
+  store.removeWorktreeLineage?.(worktree.id)
+  store.setWorkspaceLineage({
+    childWorkspaceKey: worktreeWorkspaceKey(worktree.id),
+    childInstanceId: worktree.instanceId,
+    parentWorkspaceKey: folderWorkspaceKey(folderWorkspaceId),
+    parentInstanceId: null,
+    origin: 'manual',
+    capture: { source: 'manual-action', confidence: 'explicit' },
+    createdAt: Date.now()
+  })
 }
 
 export function persistRuntimeManagedWorktreeSortOrder(args: {
