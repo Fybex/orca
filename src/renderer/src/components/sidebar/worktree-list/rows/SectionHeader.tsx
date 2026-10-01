@@ -2,6 +2,7 @@ import React from 'react'
 import { ChevronDown } from 'lucide-react'
 import type { VirtualItem } from '@tanstack/react-virtual'
 import { cn } from '@/lib/utils'
+import { useAppStore } from '@/store'
 import type { AppState } from '@/store/types'
 import { RepoIconGlyph } from '@/components/repo/repo-icon'
 import { RepoForkIndicator } from '@/components/repo/repo-fork-indicator'
@@ -366,6 +367,14 @@ export function renderWorktreeSectionHeaderRow(args: {
               label={row.label}
               onRename={ctx.onRenameProjectGroup}
               onDelete={ctx.onDeleteProjectGroup}
+              onNewFeature={
+                folderBackedProjectGroup && !folderBackedProjectGroup.connectionId
+                  ? () =>
+                      useAppStore.getState().openModal('feature-workspace', {
+                        projectGroupId: folderBackedProjectGroup.id
+                      })
+                  : undefined
+              }
             />
           ) : null}
 

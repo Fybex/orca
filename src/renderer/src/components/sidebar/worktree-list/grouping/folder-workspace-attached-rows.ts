@@ -106,6 +106,12 @@ export function getFolderWorkspaceAttachedWorktrees(args: {
   return attached
 }
 
+const FOLDER_WORKSPACE_SECTION_PREFIX = 'folder-workspace:'
+
+export function isFolderWorkspaceSectionKey(sectionKey: string): boolean {
+  return sectionKey.startsWith(FOLDER_WORKSPACE_SECTION_PREFIX)
+}
+
 /** Emits a folder workspace row followed by its attached worktrees one lineage level deeper. */
 export function appendFolderWorkspaceRows(
   ctx: SectionAppendContext,
