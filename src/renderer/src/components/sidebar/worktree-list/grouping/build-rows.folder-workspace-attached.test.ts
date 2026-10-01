@@ -12,6 +12,8 @@ import type {
   WorktreeLineage
 } from '../../../../../../shared/worktree/lineage-types'
 import { folderWorkspaceKey, worktreeWorkspaceKey } from '../../../../../../shared/workspace-scope'
+import type { AppState } from '../../../../store/types'
+import { getProjectGroupCatalogKey } from './quiet-project-group-rows'
 
 const GROUP: ProjectGroup = {
   id: 'group-1',
@@ -42,8 +44,27 @@ const FOLDER: FolderWorkspace = {
   updatedAt: 1
 }
 
-const API_REPO: Repo = { ...repo, id: 'repo-api', displayName: 'api', projectGroupId: GROUP.id }
-const WEB_REPO: Repo = { ...repo, id: 'repo-web', displayName: 'web', projectGroupId: GROUP.id }
+const API_REPO: Repo = {
+  ...repo,
+  id: 'repo-api',
+  path: '/tmp/repos/api',
+  displayName: 'api',
+  projectGroupId: GROUP.id
+}
+const WEB_REPO: Repo = {
+  ...repo,
+  id: 'repo-web',
+  path: '/tmp/repos/web',
+  displayName: 'web',
+  projectGroupId: GROUP.id
+}
+const DOCS_REPO: Repo = {
+  ...repo,
+  id: 'repo-docs',
+  path: '/tmp/repos/docs',
+  displayName: 'docs',
+  projectGroupId: GROUP.id
+}
 
 function makeWorktree(id: string, repoId: string, overrides: Partial<Worktree> = {}): Worktree {
   return {
@@ -79,13 +100,16 @@ function buildSidebarRows(options: {
   lineageById?: Record<string, WorktreeLineage>
   groupBy?: WorktreeGroupBy
   collapsedGroups?: Set<string>
+  quietProjectGroups?: boolean
+  importedWorktreesByRepo?: Parameters<typeof buildRows>[14]
 }): Row[] {
   return buildRows(
     options.groupBy ?? 'repo',
     options.worktrees,
     new Map([
       [API_REPO.id, API_REPO],
-      [WEB_REPO.id, WEB_REPO]
+      [WEB_REPO.id, WEB_REPO],
+      [DOCS_REPO.id, DOCS_REPO]
     ]),
     null,
     options.collapsedGroups ?? new Set<string>(),
@@ -95,10 +119,13 @@ function buildSidebarRows(options: {
     options.lineageById ?? {},
     new Map(options.worktrees.map((entry) => [entry.id, entry])),
     true,
-    undefined,
+    options.quietProjectGroups === undefined
+      ? undefined
+      : // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: buildRows reads only the quiet and pinned flags from settings.
+        ({ quietProjectGroups: options.quietProjectGroups } as AppState['settings']),
     [GROUP],
     new Set(),
-    new Map(),
+    options.importedWorktreesByRepo ?? new Map(),
     new Map(),
     [],
     undefined,
@@ -119,6 +146,9 @@ function describeRows(rows: Row[]): string[] {
     }
     if (row.type === 'item') {
       return [`${'  '.repeat(row.depth)}${row.worktree.id}`]
+    }
+    if (row.type === 'imported-worktrees-card') {
+      return [`hidden:${row.repo.id}`]
     }
     return row.type === 'header' ? [`# ${row.label}`] : []
   })
@@ -209,5 +239,91 @@ describe('worktrees attached to a folder workspace', () => {
         (row) => row.type === 'item' && row.worktree.id === API_FEATURE.id && row.depth === 0
       )
     ).toBe(true)
+  })
+})
+
+describe('quiet project groups', () => {
+  const WEB_MAIN = makeWorktree('web-main', WEB_REPO.id, { isMainWorktree: true })
+  const DOCS_MAIN = makeWorktree('docs-main', DOCS_REPO.id, { isMainWorktree: true })
+  const API_LOOSE = makeWorktree('api-loose', API_REPO.id)
+
+  it('drops primary rows and folds repos with nothing else into one catalog line', () => {
+    const rows = buildSidebarRows({
+      worktrees: [API_MAIN, API_FEATURE, API_LOOSE, WEB_MAIN, DOCS_MAIN],
+      workspaceLineage: [attachToFolder(API_FEATURE)],
+      quietProjectGroups: true
+    })
+
+    expect(describeRows(rows)).toEqual([
+      '# Feature group',
+      'folder:fw-1:1',
+      '  api-feature',
+      '# api',
+      'api-loose',
+      '# 2 more projects'
+    ])
+    expect(rows.find((row) => row.type === 'header' && row.catalog)).toMatchObject({
+      catalog: { expanded: false }
+    })
+  })
+
+  it('expands the catalog into the stock sections, primary rows included', () => {
+    const rows = buildSidebarRows({
+      worktrees: [API_MAIN, API_LOOSE, WEB_MAIN, DOCS_MAIN],
+      workspaceLineage: [],
+      quietProjectGroups: true,
+      collapsedGroups: new Set([getProjectGroupCatalogKey(GROUP.id)])
+    })
+
+    expect(describeRows(rows)).toEqual([
+      '# Feature group',
+      'folder:fw-1:0',
+      '# api',
+      'api-loose',
+      '# 2 more projects',
+      '# web',
+      'web-main',
+      '# docs',
+      'docs-main'
+    ])
+  })
+
+  it('keeps stock rows when the setting is off', () => {
+    const rows = buildSidebarRows({
+      worktrees: [API_MAIN, API_LOOSE, WEB_MAIN],
+      workspaceLineage: [],
+      quietProjectGroups: false
+    })
+
+    expect(describeRows(rows)).toEqual([
+      '# Feature group',
+      'folder:fw-1:0',
+      '# api',
+      'api-main',
+      'api-loose',
+      '# web',
+      'web-main'
+    ])
+  })
+
+  it('drops the hidden-worktrees notice for a repo shown with real work', () => {
+    const importedWorktreesByRepo = new Map([
+      [API_REPO.id, { repo: API_REPO, hiddenWorktrees: [] }]
+    ])
+    const quiet = buildSidebarRows({
+      worktrees: [API_MAIN, API_LOOSE],
+      workspaceLineage: [],
+      quietProjectGroups: true,
+      importedWorktreesByRepo
+    })
+    const stock = buildSidebarRows({
+      worktrees: [API_MAIN, API_LOOSE],
+      workspaceLineage: [],
+      quietProjectGroups: false,
+      importedWorktreesByRepo
+    })
+
+    expect(describeRows(quiet)).not.toContain('hidden:repo-api')
+    expect(describeRows(stock)).toContain('hidden:repo-api')
   })
 })

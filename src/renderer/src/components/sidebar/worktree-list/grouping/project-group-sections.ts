@@ -15,6 +15,7 @@ import {
   withRepoSectionDisplayLabels
 } from './section-order'
 import { appendFolderWorkspaceRows } from './folder-workspace-attached-rows'
+import { appendQuietProjectGroupRepos } from './quiet-project-group-rows'
 
 export function appendProjectGroupSections(
   ctx: SectionAppendContext,
@@ -111,7 +112,11 @@ export function appendProjectGroupSections(
       for (const pair of folderWorkspacesByProjectGroupId.get(projectGroup.id) ?? []) {
         appendFolderWorkspaceRows(ctx, pair, depth + 1)
       }
-      appendOrderedGroups(ctx, withRepoSectionDisplayLabels(repoEntries), depth + 1)
+      if (ctx.quietProjectGroups) {
+        appendQuietProjectGroupRepos(ctx, projectGroup.id, repoEntries, depth + 1)
+      } else {
+        appendOrderedGroups(ctx, withRepoSectionDisplayLabels(repoEntries), depth + 1)
+      }
       for (const childGroup of childGroups) {
         appendProjectGroup(childGroup, depth + 1)
       }

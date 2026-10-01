@@ -37,6 +37,7 @@ import {
   getRenderableFolderWorkspaces
 } from './folder-workspace-lanes'
 import { getFolderWorkspaceAttachedWorktrees } from './folder-workspace-attached-rows'
+import { isQuietProjectGroupsEnabled } from './quiet-project-group-rows'
 import { getPinnedWorktreeDisplayPolicy } from './row-types'
 import type {
   ImportedWorktreesCardCandidate,
@@ -258,7 +259,8 @@ export function buildRows(
     worktreeMap,
     nestLineage,
     cyclicLineageIds,
-    attachedWorktreesByFolderId
+    attachedWorktreesByFolderId,
+    quietProjectGroups: groupBy === 'repo' && isQuietProjectGroupsEnabled(settings)
   }
 
   if (groupBy !== 'repo' || projectGroups.length === 0) {
