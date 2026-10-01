@@ -5,6 +5,7 @@ import type { Repo } from '../../shared/repo-types'
 import type { WorkspaceLineage } from '../../shared/worktree/lineage-types'
 import { splitWorktreeId } from '../../shared/worktree/id'
 import { folderWorkspaceKey, parseWorkspaceKey } from '../../shared/workspace-scope'
+import { toFeatureFolderName } from '../../shared/feature-folder-name'
 
 /** `~/orca/workspaces` -> `~/orca/features`: features sit beside the worktrees they link to. */
 export function getFeatureFoldersRoot(workspaceDir: string): string {
@@ -13,16 +14,6 @@ export function getFeatureFoldersRoot(workspaceDir: string): string {
 
 export function isFeatureFolderPath(root: string, folderPath: string): boolean {
   return dirname(resolve(folderPath)) === resolve(root)
-}
-
-export function toFeatureFolderName(name: string): string {
-  const slug = name
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9._-]+/g, '-')
-    .replace(/^[-.]+|-+$/g, '')
-    .slice(0, 60)
-  return slug || 'feature'
 }
 
 function toLinkName(value: string): string {

@@ -9,9 +9,9 @@ import {
   removeFeatureFolder,
   reserveFeatureFolder,
   syncAllFeatureFolders,
-  syncFeatureFolder,
-  toFeatureFolderName
+  syncFeatureFolder
 } from './feature-folder-links'
+import { toFeatureFolderName } from '../../shared/feature-folder-name'
 
 let dir: string
 
