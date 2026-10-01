@@ -27,6 +27,22 @@ export function resolveWorktreeCreateParent(
   repoId: string,
   requestedParentWorktreeId: string | undefined
 ): WorktreeCreateParentPick {
+  const requestedScope = requestedParentWorktreeId
+    ? parseWorkspaceKey(requestedParentWorktreeId)
+    : null
+  if (requestedScope?.type === 'folder') {
+    // Why: a feature adds worktrees from any repo in its group to itself, whatever is active.
+    const exists = state.folderWorkspaces.some(
+      (workspace) => workspace.id === requestedScope.folderWorkspaceId
+    )
+    return exists
+      ? {
+          parentWorkspace: folderWorkspaceKey(requestedScope.folderWorkspaceId),
+          pickedDisplayName: null,
+          staleBeforeCreate: false
+        }
+      : { pickedDisplayName: null, staleBeforeCreate: true }
+  }
   const picked = requestedParentWorktreeId
     ? getIndexedWorktreeById(state.worktreesByRepo, requestedParentWorktreeId)
     : undefined

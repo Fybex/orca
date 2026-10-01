@@ -32,6 +32,7 @@ import { WorktreeDeveloperMenu } from './WorktreeDeveloperMenu'
 import { WorkspaceSleepMenuItems } from './WorkspaceSleepMenuItems'
 import { isEventTargetInsideCurrentTarget } from './worktree-card-dom-events'
 import { translate } from '@/i18n/i18n'
+import { FeatureAddReposMenuItem } from './FeatureAddReposMenuItem'
 import { useOptionalShortcutLabel } from '@/hooks/useShortcutLabel'
 import type { WorktreeContextMenuModel } from './use-worktree-context-menu-model'
 import { WorktreeStatusMenuItems } from './WorktreeStatusMenuItems'
@@ -163,6 +164,9 @@ export default function WorktreeContextMenuView({ model }: { model: WorktreeCont
               {translate('auto.components.sidebar.WorktreeContextMenu.439fa94d53', 'Update')}
             </DropdownMenuItem>
           )}
+          {!isMultiContext && folderWorkspaceId ? (
+            <FeatureAddReposMenuItem folderWorkspaceId={folderWorkspaceId} disabled={isDeleting} />
+          ) : null}
           <WorktreeStatusMenuItems
             contextWorkspaceStatus={contextWorkspaceStatus}
             deletingContext={deletingContext}
