@@ -156,6 +156,8 @@ export type FolderWorkspacesApi = {
     linkedTask?: FolderWorkspace['linkedTask']
     createdWithAgent?: FolderWorkspace['createdWithAgent']
     pendingFirstAgentMessageRename?: boolean
+    /** Local groups only: put the workspace in its own folder that links to its worktrees. */
+    featureFolder?: boolean
   }) => Promise<FolderWorkspace>
   update: (args: {
     folderWorkspaceId: string

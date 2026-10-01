@@ -9,6 +9,7 @@ import {
 } from '../../../../../../shared/worktree/host-qualified-identity'
 import WorktreeCard, { type ActiveSurfaceVariant } from '../../WorktreeCard'
 import { PINNED_GROUP_KEY } from '../grouping/group-keys'
+import { isFolderWorkspaceSectionKey } from '../grouping/folder-workspace-attached-rows'
 import type { WorktreeGroupBy } from '../grouping/row-types'
 import {
   getFolderBackedRepoWorktreeCardContentIndent,
@@ -212,7 +213,8 @@ export function renderWorktreeItemRow(
         onContextMenuSelect={ctx.onContextMenuSelect}
         onCardDragStart={ctx.onCardDragStart}
         onCardDragEnd={ctx.onCardDragEnd}
-        hideRepoBadge={ctx.groupBy === 'repo'}
+        // Why: a folder workspace's children come from several repos, so they keep the repo chip.
+        hideRepoBadge={ctx.groupBy === 'repo' && !isFolderWorkspaceSectionKey(itemRow.sectionKey)}
         // Why: pinned worktrees mix repos in one section, so only it needs the leading repo identity chip.
         hostContextLabel={itemRow.hostContextLabel}
         inPinnedSection={itemRow.sectionKey === PINNED_GROUP_KEY}

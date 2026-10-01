@@ -43,6 +43,7 @@ const AddProjectFromFolderDialog = lazy(
   () => import('../components/sidebar/AddProjectFromFolderDialog')
 )
 const ProjectAddedDialog = lazy(() => import('../components/sidebar/ProjectAddedDialog'))
+const FeatureWorkspaceDialog = lazy(() => import('../components/sidebar/FeatureWorkspaceDialog'))
 const DeleteWorktreeDialog = lazy(() => import('../components/sidebar/DeleteWorktreeDialog'))
 const PreservedBranchBatchReviewModal = lazy(
   () => import('../components/sidebar/PreservedBranchBatchReviewModal')
@@ -218,6 +219,11 @@ export function AppRootSurfaces(props: {
         {activeModal === 'project-added' ? (
           <ModalBoundary boundaryId="modal.project-added" resetKey>
             <ProjectAddedDialog />
+          </ModalBoundary>
+        ) : null}
+        {activeModal === 'feature-workspace' ? (
+          <ModalBoundary boundaryId="modal.feature-workspace" resetKey>
+            <FeatureWorkspaceDialog />
           </ModalBoundary>
         ) : null}
       </Suspense>
