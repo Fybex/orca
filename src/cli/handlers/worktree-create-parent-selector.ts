@@ -1,4 +1,4 @@
-import { isWorkspaceKey, worktreeWorkspaceKey } from '../../shared/workspace-scope'
+import { isWorkspaceKey, parseWorkspaceKey, worktreeWorkspaceKey } from '../../shared/workspace-scope'
 import { getOptionalStringFlag } from '../flags'
 import { RuntimeClientError, type RuntimeClient } from '../runtime-client'
 import { getOptionalWorktreeSelector } from '../selectors'
@@ -72,4 +72,17 @@ export function getEnvParentWorkspace(): string | undefined {
     return isWorkspaceKey(worktreeId) ? worktreeId : worktreeWorkspaceKey(worktreeId)
   }
   return undefined
+}
+
+/** `worktree set` sends one parent string; the host recognizes `folder:<id>` keys itself. */
+export async function getSetParentSelector(
+  flags: Map<string, string | boolean>,
+  cwd: string,
+  client: RuntimeClient
+): Promise<string | undefined> {
+  const parent = await resolveCreateParentSelector(flags, cwd, client)
+  const workspace = parent.parentWorkspace ? parseWorkspaceKey(parent.parentWorkspace) : null
+  return workspace?.type === 'worktree'
+    ? `id:${workspace.worktreeId}`
+    : (parent.parentWorkspace ?? parent.parentWorktree)
 }

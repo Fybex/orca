@@ -18,11 +18,7 @@ import {
   getOptionalStringFlag,
   getRequiredStringFlag
 } from '../flags'
-import {
-  getOptionalWorktreeSelector,
-  getRequiredWorktreeSelector,
-  resolveCurrentWorktreeSelector
-} from '../selectors'
+import { getRequiredWorktreeSelector, resolveCurrentWorktreeSelector } from '../selectors'
 import { isTuiAgent } from '../../shared/tui-agent-config'
 import { printLineageSummary } from './worktree-lineage-summary'
 import { projectWorktreePsTerminalVerdict } from '../worktree-ps-terminal-verdict'
@@ -34,6 +30,7 @@ import {
 import {
   assertWorktreeParentFlagsCompatible,
   getEnvParentWorkspace,
+  getSetParentSelector,
   resolveCreateParentSelector
 } from './worktree-create-parent-selector'
 import { getOptionalLinearIssueLinkFlag } from './worktree-linear-issue-link'
@@ -262,7 +259,7 @@ export const WORKTREE_HANDLERS: Record<string, CommandHandler> = {
       comment: getOptionalStringFlag(flags, 'comment'),
       workspaceStatus: getOptionalStringFlag(flags, 'workspace-status'),
       isUnread,
-      parentWorktree: await getOptionalWorktreeSelector(flags, 'parent-worktree', cwd, client),
+      parentWorktree: await getSetParentSelector(flags, cwd, client),
       noParent: flags.get('no-parent') === true
     })
     printResult(result, json, formatWorktreeShow)

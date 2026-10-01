@@ -14,7 +14,7 @@ import {
   createRecentRankLookup,
   withRepoSectionDisplayLabels
 } from './section-order'
-import { buildFolderWorkspaceRow } from './row-builders'
+import { appendFolderWorkspaceRows } from './folder-workspace-attached-rows'
 
 export function appendProjectGroupSections(
   ctx: SectionAppendContext,
@@ -113,7 +113,7 @@ export function appendProjectGroupSections(
     })
     if (!collapsedGroups.has(key)) {
       for (const pair of folderWorkspacesByProjectGroupId.get(projectGroup.id) ?? []) {
-        result.push(buildFolderWorkspaceRow(pair, depth + 1))
+        appendFolderWorkspaceRows(ctx, pair, depth + 1)
       }
       appendOrderedGroups(ctx, withRepoSectionDisplayLabels(repoEntries), depth + 1)
       for (const childGroup of childGroups) {

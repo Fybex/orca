@@ -132,6 +132,39 @@ describe('orca cli worktree awareness', () => {
     })
   })
 
+  it('passes a folder workspace parent through worktree.set without resolving it as a worktree', async () => {
+    queueFixtures(
+      callMock,
+      okFixture('req_set_folder_parent', {
+        worktree: buildWorktree('/tmp/repo/child', 'feature/child')
+      })
+    )
+    vi.spyOn(console, 'log').mockImplementation(() => {})
+
+    await main(
+      [
+        'worktree',
+        'set',
+        '--worktree',
+        'id:repo::/tmp/repo/child',
+        '--parent-worktree',
+        'folder:folder-1',
+        '--json'
+      ],
+      '/tmp/repo'
+    )
+
+    expect(callMock).toHaveBeenCalledTimes(1)
+    expect(callMock).toHaveBeenCalledWith('worktree.set', {
+      worktree: 'id:repo::/tmp/repo/child',
+      displayName: undefined,
+      linkedIssue: undefined,
+      comment: undefined,
+      parentWorktree: 'folder:folder-1',
+      noParent: false
+    })
+  })
+
   it('resolves current for explicit parent-worktree on set', async () => {
     queueFixtures(
       callMock,
