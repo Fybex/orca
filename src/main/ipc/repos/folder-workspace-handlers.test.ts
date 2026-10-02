@@ -16,8 +16,7 @@ vi.mock('electron', () => ({
 }))
 vi.mock('./repos-changed-notification', () => ({ notifyReposChanged: vi.fn() }))
 vi.mock('../../feature-folders/feature-folder-sync-scheduler', () => ({
-  scheduleFeatureFolderSync: vi.fn(),
-  startFeatureFolderSync: vi.fn()
+  scheduleFeatureFolderSync: vi.fn()
 }))
 
 import { registerFolderWorkspaceHandlers } from './folder-workspace-handlers'
