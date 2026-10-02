@@ -78,6 +78,18 @@ export const HANDLER_GROUPS: readonly HandlerGroup[] = [
     load: async () => (await import('./handlers/worktree.js')).WORKTREE_HANDLERS
   },
   {
+    name: 'folder',
+    keys: [
+      'folder list',
+      'folder show',
+      'folder create',
+      'folder add-repo',
+      'folder set',
+      'folder rm'
+    ],
+    load: async () => (await import('./handlers/folder.js')).FOLDER_HANDLERS
+  },
+  {
     name: 'file',
     keys: ['file open', 'file diff', 'file open-changed'],
     load: async () => (await import('./handlers/file.js')).FILE_HANDLERS

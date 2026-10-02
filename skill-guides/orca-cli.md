@@ -125,6 +125,24 @@ ORCA worktree create --name task --run-hooks --json
 - If an older installed CLI rejects `--agent`, `--prompt`, or `--setup`, create the worktree normally, then run `ORCA terminal create --worktree <selector> --command "<requested-agent>"` and `ORCA terminal send` if a prompt is needed. This can leave a fallback shell when no default tabs are configured; close it only after confirming it is unused.
 - `worktree create` makes a new checkout. For a fresh agent in the **current** checkout, use `ORCA terminal create --worktree active --command "codex" --json`.
 
+## Folder Workspaces
+
+A folder workspace sits on a project group's folder instead of a git checkout. Worktrees from any repo in the group can be attached to it; a feature folder workspace gets its own directory with one link per attached worktree, so an agent there sees the feature's worktrees and not every repo's main checkout.
+
+```text
+ORCA folder list --json
+ORCA folder show --folder current --json
+ORCA folder create --group <id|name> --name "Checkout flow" --feature --repo name:api --repo name:web --json
+ORCA folder add-repo --folder current --repo name:worker --json
+ORCA folder set --folder current --comment "api done; web in review" --json
+ORCA folder rm --folder folder:<folderId> --json
+```
+
+- Selectors: `id:<folderId>`, `folder:<folderId>`, `name:<name>`, or `active`/`current` (this terminal's folder workspace, else the folder or attached worktree containing the shell cwd).
+- Each `--repo` adds one worktree on branch `<name-slug>`, named after the repo and attached to the folder. `folder add-repo` skips repos that already have one.
+- Attached worktrees report `parentWorkspaceKey: folder:<folderId>` in `worktree show/list/ps`; folder rows in `worktree ps` list them in `childWorkspaceKeys`. To attach an existing worktree, use `ORCA worktree set --worktree <selector> --parent-worktree folder:<folderId> --json`.
+- `folder rm` stops the folder's own terminals; attached worktrees stay and move back under their repos.
+
 ## Worktree Comments
 
 A worktree comment is the short status line on the workspace card. Update it at meaningful checkpoints:

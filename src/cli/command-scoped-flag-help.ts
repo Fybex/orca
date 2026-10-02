@@ -2,6 +2,9 @@
 const FILE_OPEN_FOCUS_HELP =
   "--focus                Bring the user to the file (switches Orca's window to its worktree)"
 
+const FOLDER_REPO_HELP =
+  '--repo <selector>      Repo to add one attached worktree for; repeat for several'
+
 /** Per-command flag help, kept out of the shared help chain it would crowd. */
 const COMMAND_SCOPED_FLAG_HELP: Record<string, Record<string, string>> = {
   'skills get': {
@@ -17,6 +20,17 @@ const COMMAND_SCOPED_FLAG_HELP: Record<string, Record<string, string>> = {
   },
   'file open-changed': {
     focus: FILE_OPEN_FOCUS_HELP
+  },
+  'folder create': {
+    name: '--name <name>          Folder workspace name; its slug names the feature folder and branches',
+    repo: FOLDER_REPO_HELP
+  },
+  'folder add-repo': {
+    repo: FOLDER_REPO_HELP
+  },
+  'folder set': {
+    name: '--name <name>          New folder workspace name',
+    comment: '--comment <text>       Comment shown on the folder workspace card'
   },
   'skills install': {
     agent: '--agent <names>        Comma-separated install targets; default is detected agents'

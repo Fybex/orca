@@ -12,12 +12,16 @@ export const FLAG_HELP_TEXT: Record<string, string> = {
     '--direction <dir>      Direction: up|down|left|right for scroll, horizontal|vertical for split',
   'display-name': '--display-name <name>  Override the Orca display name',
   'element-index': '--element-index <n>   Element index from get-app-state',
+  feature: '--feature              Give the folder workspace its own folder linking its worktrees',
+  folder:
+    '--folder <selector>    Folder workspace selector such as id:<folderId>, folder:<folderId>, name:<name>, or active/current',
   title: '--title <text>         Custom title for the terminal tab (omit to reset)',
   enter: '--enter                Append Enter after sending text',
   force:
     '--force                Force worktree removal when supported; does not force branch deletion',
   focus: '--focus                Reveal the created terminal session in Orca',
   for: '--for exit|tui-idle    Wait condition to satisfy',
+  group: '--group <id|name>      Project group id or exact name',
   'from-element-index': '--from-element-index <n> Source element index from get-app-state',
   'from-x': '--from-x <x>           Source window-local x coordinate',
   'from-y': '--from-y <y>           Source window-local y coordinate',
