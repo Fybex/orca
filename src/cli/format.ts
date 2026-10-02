@@ -24,6 +24,12 @@ export {
 } from './computer-format'
 export type { ComputerActionFollowUpTarget } from './computer-format'
 export {
+  formatFolderList,
+  formatFolderRepos,
+  formatFolderSet,
+  formatFolderShow
+} from './folder-format'
+export {
   formatProjectHostSetupCreateResult,
   formatProjectHostSetupDeleteResult,
   formatProjectHostSetupList,
