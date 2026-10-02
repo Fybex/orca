@@ -1,6 +1,7 @@
 import { lstat, mkdir, readdir, readlink, rmdir, symlink, unlink } from 'node:fs/promises'
 import { basename, dirname, join, resolve } from 'node:path'
 import type { FolderWorkspace } from '../../shared/folder-workspace-types'
+import type { ProjectGroup } from '../../shared/project-group-types'
 import type { Repo } from '../../shared/repo-types'
 import type { WorkspaceLineage } from '../../shared/worktree/lineage-types'
 import { splitWorktreeId } from '../../shared/worktree/id'
@@ -142,4 +143,36 @@ export async function reserveFeatureFolder(root: string, name: string): Promise<
       return candidate
     }
   }
+}
+
+/** SSH groups are refused: their worktrees live on the remote host, so local links would dangle. */
+export async function reserveFeatureFolderForGroup(args: {
+  workspaceDir: string
+  group: Pick<ProjectGroup, 'name' | 'connectionId'>
+  name: string | undefined
+  connectionId: string | null | undefined
+}): Promise<string> {
+  if (args.connectionId ?? args.group.connectionId) {
+    throw new Error('feature_folder_requires_local_group')
+  }
+  return reserveFeatureFolder(
+    getFeatureFoldersRoot(args.workspaceDir),
+    args.name || args.group.name
+  )
+}
+
+/** Folders outside the features root are the user's own and are kept. */
+export async function removeDeletedFeatureFolder(
+  workspaceDir: string,
+  workspace: Pick<FolderWorkspace, 'connectionId' | 'folderPath'>
+): Promise<void> {
+  if (
+    workspace.connectionId ||
+    !isFeatureFolderPath(getFeatureFoldersRoot(workspaceDir), workspace.folderPath)
+  ) {
+    return
+  }
+  await removeFeatureFolder(workspace.folderPath).catch((error: unknown) => {
+    console.warn('[feature-folders] could not remove feature folder:', error)
+  })
 }

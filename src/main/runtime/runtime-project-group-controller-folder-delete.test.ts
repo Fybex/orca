@@ -16,7 +16,13 @@ function createController(
   const cleanupRemovedFolderWorkspaceState = vi.fn()
   const notifyReposChanged = vi.fn()
   const controller = new RuntimeProjectGroupController({
-    getStore: () => ({ getFolderWorkspaces: () => [workspace], removeFolderWorkspace }) as never,
+    getStore: () =>
+      // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: delete reads only the stubbed store methods.
+      ({
+        getFolderWorkspaces: () => [workspace],
+        removeFolderWorkspace,
+        getSettings: () => ({ workspaceDir: '/tmp/orca/workspaces' })
+      }) as never,
     resolveRepo: async () => {
       throw new Error('unused')
     },
