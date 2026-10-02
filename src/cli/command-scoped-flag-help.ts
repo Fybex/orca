@@ -28,6 +28,10 @@ const COMMAND_SCOPED_FLAG_HELP: Record<string, Record<string, string>> = {
   'folder add-repo': {
     repo: FOLDER_REPO_HELP
   },
+  'folder move': {
+    before: '--before <selector>    Folder workspace to place the moved one right above',
+    after: '--after <selector>     Folder workspace to place the moved one right below'
+  },
   'folder set': {
     name: '--name <name>          New folder workspace name',
     comment: '--comment <text>       Comment shown on the folder workspace card'

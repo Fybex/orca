@@ -48,6 +48,16 @@ export function formatFolderList(
     .join('\n\n')
 }
 
+/** One project group's folder workspaces, top to bottom as the sidebar shows them. */
+export function formatFolderOrder(result: { folderWorkspaces: FolderWorkspace[] }): string {
+  return result.folderWorkspaces
+    .map(
+      (folderWorkspace, index) =>
+        `${index + 1}. folder:${folderWorkspace.id}  ${folderWorkspace.name}`
+    )
+    .join('\n')
+}
+
 export function formatFolderShow(result: FolderShowResult): string {
   const { folderWorkspace } = result
   return [

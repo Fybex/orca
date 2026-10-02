@@ -70,6 +70,21 @@ export const FOLDER_COMMAND_SPECS: CommandSpec[] = [
     ]
   },
   {
+    path: ['folder', 'move'],
+    summary: 'Move a folder workspace before or after another one in its project group',
+    usage:
+      'orca folder move --folder <selector> (--before <selector> | --after <selector>) [--json]',
+    allowedFlags: [...GLOBAL_FLAGS, 'folder', 'before', 'after'],
+    notes: [
+      FOLDER_SELECTOR_NOTE,
+      'Sets the manual order the sidebar sorts folder rows by, the same order a drag in the sidebar writes. Both folders must be in the same project group.'
+    ],
+    examples: [
+      'orca folder move --folder "name:Checkout flow" --before "name:Billing API" --json',
+      'orca folder move --folder current --after folder:<folderId>'
+    ]
+  },
+  {
     path: ['folder', 'rm'],
     destructive: true,
     summary: 'Remove a folder workspace from Orca',

@@ -85,6 +85,7 @@ export const HANDLER_GROUPS: readonly HandlerGroup[] = [
       'folder create',
       'folder add-repo',
       'folder set',
+      'folder move',
       'folder rm'
     ],
     load: async () => (await import('./handlers/folder.js')).FOLDER_HANDLERS

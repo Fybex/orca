@@ -135,6 +135,7 @@ ORCA folder show --folder current --json
 ORCA folder create --group <id|name> --name "Checkout flow" --feature --repo name:api --repo name:web --json
 ORCA folder add-repo --folder current --repo name:worker --json
 ORCA folder set --folder current --comment "api done; web in review" --json
+ORCA folder move --folder "name:Checkout flow" --before "name:Billing API" --json
 ORCA folder rm --folder folder:<folderId> --json
 ```
 

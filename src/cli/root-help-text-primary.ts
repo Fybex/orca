@@ -81,6 +81,7 @@ export const ROOT_HELP_TEXT_PRIMARY = [
   '  folder create             Create a folder workspace, optionally a feature with repo worktrees',
   '  folder add-repo           Add one worktree per repo to a folder workspace',
   '  folder set                Update Orca metadata for a folder workspace',
+  '  folder move               Move a folder workspace before or after another one',
   '  folder rm                 Remove a folder workspace from Orca',
   '',
   'Files:',
