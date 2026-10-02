@@ -21,6 +21,12 @@ import { useWorktreePointerDragAutoscroll } from './use-pointer-autoscroll'
 import { useWorktreePointerDragWindowEvents } from './use-pointer-window-events'
 import { flushWorktreePointerDragFrame } from './pointer-flush'
 import { EMPTY_WORKTREE_DRAG_PREVIEW_OFFSETS, type WorktreePointerDrag } from './row-state'
+import { isFolderWorkspaceDragGroupKey } from '../../folder-workspace-drag-order'
+import type { WorktreeDragGroup } from '../../worktree-manual-order'
+
+function hasSiblingInDragGroup(groups: readonly WorktreeDragGroup[], groupKey: string): boolean {
+  return (groups.find((group) => group.key === groupKey)?.worktreeIds.length ?? 0) > 1
+}
 
 export function useWorktreePointerDrag(args: {
   ctx: WorktreeDropCommitContext
@@ -170,21 +176,27 @@ export function useWorktreePointerDrag(args: {
         return
       }
       const rects = getWorktreeSidebarDragRectsForGroup(container, sourceGroupKey)
+      const isFolderDrag = isFolderWorkspaceDragGroupKey(sourceGroupKey)
       const canPreviewWorkspaceBoardOnDrag =
         !workspaceBoardOpen &&
         onWorkspaceBoardDragPreviewStart !== NOOP_WORKSPACE_BOARD_DRAG_PREVIEW_CALLBACK
-      if (
-        rects.length <= 1 &&
-        !hasWorkspaceKanbanSidebarDropBoard() &&
-        !canPreviewWorkspaceBoardOnDrag
-      ) {
+      const cannotReorder = isFolderDrag
+        ? !hasSiblingInDragGroup(session.folderWorkspaceDragGroups, sourceGroupKey)
+        : rects.length <= 1 &&
+          !hasWorkspaceKanbanSidebarDropBoard() &&
+          !canPreviewWorkspaceBoardOnDrag
+      if (cannotReorder) {
         return
       }
+      // Why: a folder row only reorders among its sibling folders, never with selected worktrees,
+      // and has no worktree lineage to expand.
       const draggedIds =
-        selectedWorktreeIds.has(getWorktreeHostIdentity(worktree)) && selectedWorktrees.length > 1
+        !isFolderDrag &&
+        selectedWorktreeIds.has(getWorktreeHostIdentity(worktree)) &&
+        selectedWorktrees.length > 1
           ? selectedWorktrees.map((worktree) => worktree.id)
           : [worktreeId]
-      const reorderDraggedIds = session.getReorderDraggedIds(draggedIds)
+      const reorderDraggedIds = isFolderDrag ? draggedIds : session.getReorderDraggedIds(draggedIds)
       const reorderUnitDraggedIds = session.getReorderUnitDraggedIds(
         sourceGroupKey,
         reorderDraggedIds

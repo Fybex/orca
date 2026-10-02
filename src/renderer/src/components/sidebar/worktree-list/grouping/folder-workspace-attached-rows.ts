@@ -112,6 +112,13 @@ export function isFolderWorkspaceSectionKey(sectionKey: string): boolean {
   return sectionKey.startsWith(FOLDER_WORKSPACE_SECTION_PREFIX)
 }
 
+/** The folder key of the folder workspace an attached row sits under, or null for any other row. */
+export function getFolderWorkspaceKeyForSection(sectionKey: string): string | null {
+  return isFolderWorkspaceSectionKey(sectionKey)
+    ? folderWorkspaceKey(sectionKey.slice(FOLDER_WORKSPACE_SECTION_PREFIX.length))
+    : null
+}
+
 /** Emits a folder workspace row followed by its attached worktrees one lineage level deeper. */
 export function appendFolderWorkspaceRows(
   ctx: SectionAppendContext,

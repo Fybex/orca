@@ -9,6 +9,7 @@ import {
 import { updateSidebarDragPreviewPosition } from '../../worktree-sidebar-pointer-drag-dom'
 import { getPointerDropStatusTarget, shouldPreferSidebarStatusDropTarget } from './status-target'
 import type { WorktreeDropCommitContext } from './drop-commit-context'
+import { isFolderWorkspaceDragGroupKey } from '../../folder-workspace-drag-order'
 import {
   applyWorktreeDropPreview,
   applyWorktreeLineageDropPreview,
@@ -78,6 +79,49 @@ function clearInsertionLine(args: WorktreePointerDragFrameArgs): void {
   )
 }
 
+// The insertion line inside the source group, once the pointer has settled on a slot.
+function showReorderSlot(args: WorktreePointerDragFrameArgs, onNoSlot: () => void): void {
+  const { drag, ctx } = args
+  const drop = ctx.computeWorktreeDrop(drag.currentY)
+  if (!drop) {
+    drag.reorderIntent = null
+    onNoSlot()
+    return
+  }
+  // Let the pointer cross a reorder gutter into the card before moving its target.
+  let intent = drag.reorderIntent
+  if (!intent || (intent.dropIndex !== drop.dropIndex && intent.pointerY !== drag.currentY)) {
+    intent = {
+      dropIndex: drop.dropIndex,
+      pointerY: drag.currentY,
+      startedAt: performance.now()
+    }
+  } else {
+    // Autoscroll changes slots beneath a stationary pointer without renewing intent.
+    intent.dropIndex = drop.dropIndex
+    intent.pointerY = drag.currentY
+  }
+  drag.reorderIntent = intent
+  if (performance.now() - intent.startedAt < REORDER_INTENT_DELAY_MS) {
+    drag.latestStatusDropTarget = null
+    args.setWorktreeDragState((prev) =>
+      clearWorktreeDropPreview(prev, {
+        pointerY: drag.currentY,
+        preserveOffsets: true
+      })
+    )
+    drag.frameId = window.requestAnimationFrame(() => flushWorktreePointerDragFrame(args))
+    return
+  }
+  drag.latestStatusDropTarget = null
+  clearWorkspaceKanbanSidebarDropTargetVisual()
+  args.setDragOverStatus(null)
+  args.setPinDragOver(false)
+  args.setWorktreeDragState((prev) =>
+    applyWorktreeDropPreview(prev, drop, { pointerY: drag.currentY, matchPointerY: true })
+  )
+}
+
 // One animation frame of an in-flight pointer drag: move the floating preview, then decide
 // whether the pointer is over the workspace board, a status/pin section, or a reorder slot.
 export function flushWorktreePointerDragFrame(args: WorktreePointerDragFrameArgs): void {
@@ -96,6 +140,12 @@ export function flushWorktreePointerDragFrame(args: WorktreePointerDragFrameArgs
   })
   if (!ctx.refreshWorktreeDragSession()) {
     ctx.clearWorktreeDrag()
+    return
+  }
+  // Why: a folder row only reorders among its sibling folders; board, status and lineage drops
+  // take worktrees.
+  if (isFolderWorkspaceDragGroupKey(drag.sourceGroupKey)) {
+    showReorderSlot(args, () => clearInsertionLine(args))
     return
   }
   // Why: show the board preview as soon as a card drag begins so the drop target is visible up front, not only at the sidebar edge.
@@ -174,42 +224,5 @@ export function flushWorktreePointerDragFrame(args: WorktreePointerDragFrameArgs
     return
   }
 
-  const drop = ctx.computeWorktreeDrop(drag.currentY)
-  if (!drop) {
-    drag.reorderIntent = null
-    showStatusHoverWithoutInsertionLine(args, preferredStatusTarget)
-    return
-  }
-  // Let the pointer cross a reorder gutter into the card before moving its target.
-  let intent = drag.reorderIntent
-  if (!intent || (intent.dropIndex !== drop.dropIndex && intent.pointerY !== drag.currentY)) {
-    intent = {
-      dropIndex: drop.dropIndex,
-      pointerY: drag.currentY,
-      startedAt: performance.now()
-    }
-  } else {
-    // Autoscroll changes slots beneath a stationary pointer without renewing intent.
-    intent.dropIndex = drop.dropIndex
-    intent.pointerY = drag.currentY
-  }
-  drag.reorderIntent = intent
-  if (performance.now() - intent.startedAt < REORDER_INTENT_DELAY_MS) {
-    drag.latestStatusDropTarget = null
-    args.setWorktreeDragState((prev) =>
-      clearWorktreeDropPreview(prev, {
-        pointerY: drag.currentY,
-        preserveOffsets: true
-      })
-    )
-    drag.frameId = window.requestAnimationFrame(() => flushWorktreePointerDragFrame(args))
-    return
-  }
-  drag.latestStatusDropTarget = null
-  clearWorkspaceKanbanSidebarDropTargetVisual()
-  args.setDragOverStatus(null)
-  args.setPinDragOver(false)
-  args.setWorktreeDragState((prev) =>
-    applyWorktreeDropPreview(prev, drop, { pointerY: drag.currentY, matchPointerY: true })
-  )
+  showReorderSlot(args, () => showStatusHoverWithoutInsertionLine(args, preferredStatusTarget))
 }

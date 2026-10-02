@@ -76,7 +76,9 @@ function setup() {
       onMoveWorktreesToStatus: vi.fn(),
       onMoveWorktreesToStatusAtIndex: vi.fn(),
       onReorderWorktrees: vi.fn(),
-      onPinWorktrees: vi.fn()
+      onPinWorktrees: vi.fn(),
+      folderWorkspaceDragGroups: [],
+      onReorderFolderWorkspaces: vi.fn()
     },
     workspaceBoardOpen: false,
     onWorkspaceBoardDragPreviewStart: vi.fn(),
@@ -157,6 +159,20 @@ describe('combined nesting and animated reordering', () => {
     const frames = vi.mocked(window.requestAnimationFrame).mock.calls.length
     t.tick(1000)
     expect(vi.mocked(window.requestAnimationFrame).mock.calls).toHaveLength(frames)
+  })
+})
+
+describe('folder row drags', () => {
+  it('only reorder: no board preview and no nesting under a worktree', () => {
+    const t = setup()
+    t.args.drag.sourceGroupKey = 'folder-order:group-1:project-group:group-1'
+    t.nest('parent')
+    flushWorktreePointerDragFrame(t.args)
+    t.tick(160)
+    expect(t.args.onWorkspaceBoardDragPreviewStart).not.toHaveBeenCalled()
+    expect(t.state().lineageDropTargetId).toBeNull()
+    expect(t.state().previewOffsetsByWorktreeId).toBe(t.offsets)
+    expect(t.state().dropIndicatorY).toBe(300)
   })
 })
 

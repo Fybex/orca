@@ -7,7 +7,7 @@ import {
   moveWorktreeIdsWithinGroup,
   shouldWriteManualOrderForGroupDrop
 } from './worktree-manual-order'
-import { buildSparseManualOrderUpdates } from './worktree-manual-order-ranks'
+import { buildSparseManualOrderUpdates } from '../../../../shared/manual-order-ranks'
 
 describe('buildSparseManualOrderUpdates durable migration', () => {
   it('materializes filtered rows when the first drag creates Manual order', () => {

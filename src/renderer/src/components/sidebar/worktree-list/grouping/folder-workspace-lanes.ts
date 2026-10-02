@@ -64,14 +64,3 @@ export function getFolderWorkspaceLaneKey(
       return ALL_GROUP_KEY
   }
 }
-
-/** Sidebar display order: user-authored order first, then name. Mirrors the rule
- *  the project-group emitter has always used, so lanes and groups agree. */
-export function compareFolderWorkspacesForDisplay(
-  left: FolderWorkspace,
-  right: FolderWorkspace
-): number {
-  const leftOrder = left.manualOrder ?? left.sortOrder
-  const rightOrder = right.manualOrder ?? right.sortOrder
-  return rightOrder - leftOrder || left.name.localeCompare(right.name)
-}

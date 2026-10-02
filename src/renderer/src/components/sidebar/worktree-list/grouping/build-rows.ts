@@ -32,10 +32,8 @@ import {
   buildFolderWorkspaceRow,
   buildPendingCreationRow
 } from './row-builders'
-import {
-  compareFolderWorkspacesForDisplay,
-  getRenderableFolderWorkspaces
-} from './folder-workspace-lanes'
+import { getRenderableFolderWorkspaces } from './folder-workspace-lanes'
+import { compareFolderWorkspacesForDisplay } from '../../../../../../shared/folder-workspace-order'
 import { getFolderWorkspaceAttachedWorktrees } from './folder-workspace-attached-rows'
 import { isQuietProjectGroupsEnabled } from './quiet-project-group-rows'
 import { getPinnedWorktreeDisplayPolicy } from './row-types'

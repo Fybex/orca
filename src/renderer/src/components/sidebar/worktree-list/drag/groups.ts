@@ -2,6 +2,19 @@ import { ALL_GROUP_KEY, PINNED_GROUP_KEY } from '../grouping/group-keys'
 import { getNaturalWorktreeIds } from '../../natural-worktree-ids'
 import type { HostSectionRow } from '../../host-section-rows'
 import type { WorktreeDragGroup } from '../../worktree-manual-order'
+import { getFolderWorkspaceDragGroupKey } from '../../folder-workspace-drag-order'
+import { folderWorkspaceKey } from '../../../../../../shared/workspace-scope'
+
+/** Folder rows form their own drag groups, keyed by section and project group. */
+function getFolderWorkspaceDragGroupKeyForRow(
+  row: Extract<HostSectionRow, { type: 'folder-workspace' }>,
+  sectionKey: string | undefined
+): string {
+  return getFolderWorkspaceDragGroupKey(
+    sectionKey ?? ALL_GROUP_KEY,
+    row.folderWorkspace.projectGroupId
+  )
+}
 
 export function getWorktreeDragGroups(rows: HostSectionRow[]): WorktreeDragGroup[] {
   const groups: WorktreeDragGroup[] = []
@@ -36,6 +49,27 @@ export function getWorktreeDragGroups(rows: HostSectionRow[]): WorktreeDragGroup
   return groups.filter((group) => group.worktreeIds.length > 0)
 }
 
+/** Folder rows by drag group, in display order. Kept apart from the worktree groups so a
+ *  folder key never reaches a worktree manual-order write. */
+export function getFolderWorkspaceDragGroups(rows: readonly HostSectionRow[]): WorktreeDragGroup[] {
+  const idsByKey = new Map<string, string[]>()
+  let sectionKey: string | undefined
+  for (const row of rows) {
+    if (row.type === 'header') {
+      sectionKey = row.key
+      continue
+    }
+    if (row.type !== 'folder-workspace') {
+      continue
+    }
+    const key = getFolderWorkspaceDragGroupKeyForRow(row, sectionKey)
+    const ids = idsByKey.get(key) ?? []
+    ids.push(folderWorkspaceKey(row.folderWorkspace.id))
+    idsByKey.set(key, ids)
+  }
+  return [...idsByKey].map(([key, worktreeIds]) => ({ key, worktreeIds }))
+}
+
 export function getWorktreeDragIndexes(rows: readonly HostSectionRow[]): {
   groupKeyByRowKey: Map<string, string>
   groupIndexByRowKey: Map<string, number>
@@ -44,9 +78,21 @@ export function getWorktreeDragIndexes(rows: readonly HostSectionRow[]): {
   const groupIndexByRowKey = new Map<string, number>()
   const groupIndexes = new Map<string, number>()
   const naturalWorktreeIds = getNaturalWorktreeIds(rows)
+  let currentSectionKey: string | undefined
   for (const row of rows) {
     if (row.type === 'header') {
+      currentSectionKey = row.key
       groupIndexes.set(row.key, 0)
+      continue
+    }
+    if (row.type === 'folder-workspace') {
+      // Why: folder rows pass their folder key as the row key on pointer down.
+      const rowKey = folderWorkspaceKey(row.folderWorkspace.id)
+      const groupKey = getFolderWorkspaceDragGroupKeyForRow(row, currentSectionKey)
+      const index = groupIndexes.get(groupKey) ?? 0
+      groupKeyByRowKey.set(rowKey, groupKey)
+      groupIndexByRowKey.set(rowKey, index)
+      groupIndexes.set(groupKey, index + 1)
       continue
     }
     if (row.type !== 'item') {

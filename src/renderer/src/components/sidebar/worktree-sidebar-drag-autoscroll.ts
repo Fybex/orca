@@ -131,12 +131,11 @@ export function getWorktreeSidebarDragRectsForGroup(
 ): WorktreeSidebarDragRect[] {
   const containerRect = container.getBoundingClientRect()
   const rects: WorktreeSidebarDragRect[] = []
-  container.querySelectorAll<HTMLElement>('[data-worktree-drag-id]').forEach((element) => {
-    if (element.getAttribute('data-worktree-drag-group-key') !== groupKey) {
-      return
-    }
-    const worktreeId = element.getAttribute('data-worktree-drag-id')
-    const rawGroupIndex = element.getAttribute('data-worktree-drag-group-index')
+  const pushRect = (
+    element: HTMLElement,
+    worktreeId: string | null,
+    rawGroupIndex: string | null
+  ) => {
     const groupIndex = rawGroupIndex === null ? Number.NaN : Number(rawGroupIndex)
     if (!worktreeId || !Number.isFinite(groupIndex)) {
       return
@@ -156,7 +155,28 @@ export function getWorktreeSidebarDragRectsForGroup(
       top,
       bottom: top + rect.height
     })
+  }
+  container.querySelectorAll<HTMLElement>('[data-worktree-drag-id]').forEach((element) => {
+    if (element.getAttribute('data-worktree-drag-group-key') === groupKey) {
+      pushRect(
+        element,
+        element.getAttribute('data-worktree-drag-id'),
+        element.getAttribute('data-worktree-drag-group-index')
+      )
+    }
   })
+  // Why: rows attached under a folder row are part of its drag unit, so the unit spans them.
+  container
+    .querySelectorAll<HTMLElement>('[data-worktree-drag-unit-member-group-key]')
+    .forEach((element) => {
+      if (element.getAttribute('data-worktree-drag-unit-member-group-key') === groupKey) {
+        pushRect(
+          element,
+          element.getAttribute('data-worktree-id'),
+          element.getAttribute('data-worktree-drag-unit-member-group-index')
+        )
+      }
+    })
   rects.sort((a, b) => a.top - b.top)
   return rects
 }

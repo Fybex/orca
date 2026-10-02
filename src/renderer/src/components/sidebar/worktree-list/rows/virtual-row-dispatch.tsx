@@ -30,6 +30,7 @@ import {
 } from './item-row'
 import { renderWorktreeSectionHeaderRow, type SectionHeaderRowContext } from './SectionHeader'
 import type { WorktreeRowDragState } from '../drag/row-state'
+import { getFolderWorkspaceKeyForSection } from '../grouping/folder-workspace-attached-rows'
 
 export type WorktreeVirtualRowContext = {
   renderRows: RenderRow[]
@@ -58,6 +59,20 @@ export type WorktreeVirtualRowContext = {
   onWorkspaceStatusDragOver: (event: React.DragEvent, status: WorkspaceStatus) => void
   onWorkspaceStatusDragLeave: (event: React.DragEvent) => void
   onWorkspaceStatusDrop: (event: React.DragEvent, status: WorkspaceStatus) => void
+}
+
+// Why: rows attached under a folder row shift with it while folder rows are being reordered.
+function getItemPreviewOffset(
+  dragState: WorktreeRowDragState,
+  row: { worktree: { id: string }; sectionKey: string }
+): number {
+  const offsets = dragState.previewOffsetsByWorktreeId
+  const parentFolderKey = getFolderWorkspaceKeyForSection(row.sectionKey)
+  return (
+    offsets.get(row.worktree.id) ??
+    (parentFolderKey ? offsets.get(parentFolderKey) : undefined) ??
+    0
+  )
 }
 
 function renderHostHeaderVirtualRow(
@@ -110,9 +125,7 @@ function renderLineageGroupVirtualRow(
 ): React.JSX.Element {
   const [parent, ...children] = row.rows
   const childIsActive = children.some((child) => child.worktree.id === ctx.activeWorktreeId)
-  const parentPreviewOffset = parent
-    ? (ctx.worktreeDragState.previewOffsetsByWorktreeId.get(parent.worktree.id) ?? 0)
-    : 0
+  const parentPreviewOffset = parent ? getItemPreviewOffset(ctx.worktreeDragState, parent) : 0
   return (
     <div
       key={vItem.key}
@@ -219,8 +232,7 @@ export function renderWorktreeVirtualRow(
     ctx.groupBy === 'workspace-status'
       ? getWorkspaceStatus(row.worktree, ctx.workspaceStatuses)
       : null
-  const itemPreviewOffset =
-    ctx.worktreeDragState.previewOffsetsByWorktreeId.get(row.worktree.id) ?? 0
+  const itemPreviewOffset = getItemPreviewOffset(ctx.worktreeDragState, row)
 
   return (
     <div
