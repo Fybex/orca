@@ -28,6 +28,7 @@ import type { RuntimeDesktopWindowStatus } from '../../shared/runtime-types'
 import { ArtifactCloudService } from '../artifacts/artifact-cloud-service'
 import { SkillCloudService } from '../skills/skill-cloud-service'
 import { isArtifactSharingEnabled } from '../../shared/artifact-sharing-gate'
+import { startFeatureFolderSync } from '../feature-folders/feature-folder-sync-scheduler'
 import {
   AgentStatusObservedPaneIdentities,
   recordObservedAgentStatusPaneIdentity
@@ -162,6 +163,8 @@ export function initializeMainProcessRuntime(): OrcaRuntimeService {
     getScopeCatalog: () => sessionSearchScopeCatalogFromStore(store, LOCAL_EXECUTION_HOST_ID)
   })
   app.once('will-quit', () => sessionSearch?.dispose())
+  // Why here and not with the window's IPC handlers: headless serve creates feature folders too.
+  startFeatureFolderSync(store)
   state.runtime = runtime
   agentHookServer.subscribeEnrichedStatus((enriched) =>
     recordObservedAgentStatusPaneIdentity(observedPaneIdentities, enriched.paneKey, runtime)

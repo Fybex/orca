@@ -265,6 +265,10 @@ async function startOrcadRuntime(
     getSettings: () => profileStore.getSettings()
   })
   getAppEnvironment().onWillQuit(() => sessionSearch?.dispose())
+  // Why here too: a paired client can create feature folders on this host.
+  const { startFeatureFolderSync } =
+    await import('../feature-folders/feature-folder-sync-scheduler')
+  startFeatureFolderSync(profileStore)
 
   // Why here too and not only on the desktop: nothing else republishes `session.tabs` when a
   // pane's status row changes, and orcad's whole job is serving paired clients.

@@ -12,10 +12,7 @@ import { getSshFilesystemProvider } from '../../providers/ssh-filesystem-dispatc
 import type { OrcaRuntimeService } from '../../runtime/orca-runtime'
 import { notifyReposChanged } from './repos-changed-notification'
 import { reserveFeatureFolderForGroup } from '../../feature-folders/feature-folder-links'
-import {
-  scheduleFeatureFolderSync,
-  startFeatureFolderSync
-} from '../../feature-folders/feature-folder-sync-scheduler'
+import { scheduleFeatureFolderSync } from '../../feature-folders/feature-folder-sync-scheduler'
 import {
   FolderWorkspaceCreateArgs,
   FolderWorkspacePathStatusArgs,
@@ -29,7 +26,6 @@ export function registerFolderWorkspaceHandlers(
   store: Store,
   runtime: OrcaRuntimeService
 ): void {
-  startFeatureFolderSync(store)
   ipcMain.handle('folderWorkspaces:list', (): FolderWorkspace[] => store.getFolderWorkspaces())
 
   ipcMain.handle('folderWorkspaces:getPathStatus', async (_event, rawArgs: unknown) => {
