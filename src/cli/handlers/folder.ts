@@ -1,7 +1,12 @@
 import type { FolderWorkspace } from '../../shared/folder-workspace-types'
+import {
+  compareFolderWorkspacesForDisplay,
+  planFolderWorkspaceMove
+} from '../../shared/folder-workspace-order'
 import type { CommandHandler, HandlerContext } from '../dispatch'
 import {
   formatFolderList,
+  formatFolderOrder,
   formatFolderRepos,
   formatFolderSet,
   formatFolderShow,
@@ -32,6 +37,21 @@ async function resolveFolderFlag(
     ctx.client
   )
   return { response, folderWorkspace }
+}
+
+function getMoveTarget(flags: Map<string, string | boolean>): {
+  selector: string
+  side: 'before' | 'after'
+} {
+  const before = getOptionalStringFlag(flags, 'before')
+  const after = getOptionalStringFlag(flags, 'after')
+  if (before && !after) {
+    return { selector: before, side: 'before' }
+  }
+  if (after && !before) {
+    return { selector: after, side: 'after' }
+  }
+  throw new RuntimeClientError('invalid_argument', 'Pass exactly one of --before or --after.')
 }
 
 function getRequiredRepoSelectors(flags: Map<string, string | boolean>): string[] {
@@ -136,6 +156,47 @@ export const FOLDER_HANDLERS: Record<string, CommandHandler> = {
       )
     }
     printResult({ ...response, result: { folderWorkspace: updated } }, ctx.json, formatFolderSet)
+  },
+  'folder move': async (ctx) => {
+    const moveTarget = getMoveTarget(ctx.flags)
+    const { response, folderWorkspace } = await resolveFolderFlag(ctx)
+    const target = await resolveFolderWorkspace(
+      response.result.folderWorkspaces,
+      moveTarget.selector,
+      ctx.cwd,
+      ctx.client
+    )
+    const inGroup = ({ projectGroupId }: FolderWorkspace) =>
+      projectGroupId === folderWorkspace.projectGroupId
+    if (target.id === folderWorkspace.id) {
+      throw new RuntimeClientError(
+        'invalid_argument',
+        `--${moveTarget.side} names the folder workspace being moved.`
+      )
+    }
+    if (!inGroup(target)) {
+      throw new RuntimeClientError(
+        'invalid_argument',
+        `--${moveTarget.side} must name a folder workspace in the same project group.`
+      )
+    }
+    const updates = planFolderWorkspaceMove({
+      scope: response.result.folderWorkspaces.filter(inGroup),
+      movedId: folderWorkspace.id,
+      target: moveTarget.side === 'before' ? { beforeId: target.id } : { afterId: target.id },
+      now: Date.now()
+    })
+    for (const [folderWorkspaceId, manualOrder] of updates) {
+      await ctx.client.call('folderWorkspace.update', {
+        folderWorkspaceId,
+        updates: { manualOrder }
+      })
+    }
+    const listed = await ctx.client.call<FolderWorkspaceList>('folderWorkspace.list')
+    const folderWorkspaces = listed.result.folderWorkspaces
+      .filter(inGroup)
+      .sort(compareFolderWorkspacesForDisplay)
+    printResult({ ...listed, result: { folderWorkspaces } }, ctx.json, formatFolderOrder)
   },
   'folder rm': async (ctx) => {
     const { folderWorkspace } = await resolveFolderFlag(ctx)

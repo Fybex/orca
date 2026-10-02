@@ -288,6 +288,54 @@ describe('folder add-repo', () => {
   })
 })
 
+describe('folder move', () => {
+  function movableClient() {
+    const live = [
+      folderWorkspace({ id: 'a', name: 'A', manualOrder: 30 }),
+      folderWorkspace({ id: 'b', name: 'B', manualOrder: 20 }),
+      folderWorkspace({ id: 'c', name: 'C', manualOrder: 10 }),
+      folderWorkspace({ id: 'x', name: 'X', projectGroupId: 'g-2', manualOrder: 25 })
+    ]
+    return client({
+      'folderWorkspace.list': () => ({ folderWorkspaces: live.map((entry) => ({ ...entry })) }),
+      'folderWorkspace.update': (params) => {
+        const entry = live.find(({ id }) => id === params?.folderWorkspaceId)
+        const updates = params?.updates
+        if (entry && typeof updates === 'object' && updates !== null && 'manualOrder' in updates) {
+          entry.manualOrder = Number(updates.manualOrder)
+        }
+        return { folderWorkspace: entry ?? null }
+      }
+    })
+  }
+
+  it('moves a folder before another one and prints the new order', async () => {
+    const log = vi.spyOn(console, 'log').mockImplementation(() => undefined)
+    const rpc = movableClient()
+
+    await run('folder move', rpc, { folder: 'folder:c', before: 'name:A' }, { json: false })
+
+    const updates = rpc.call.mock.calls.filter(([method]) => method === 'folderWorkspace.update')
+    expect(updates.map(([, params]) => params?.folderWorkspaceId)).toEqual(['c'])
+    expect(log).toHaveBeenCalledWith('1. folder:c  C\n2. folder:a  A\n3. folder:b  B')
+  })
+
+  it('refuses a target in another project group, itself, or both sides at once', async () => {
+    await expect(
+      run('folder move', movableClient(), { folder: 'folder:a', after: 'folder:x' })
+    ).rejects.toMatchObject({ code: 'invalid_argument' })
+    await expect(
+      run('folder move', movableClient(), { folder: 'folder:a', after: 'folder:a' })
+    ).rejects.toMatchObject({ code: 'invalid_argument' })
+    await expect(
+      run('folder move', movableClient(), { folder: 'folder:a', before: 'b', after: 'c' })
+    ).rejects.toMatchObject({
+      code: 'invalid_argument',
+      message: expect.stringContaining('exactly one')
+    })
+  })
+})
+
 describe('folder set and rm', () => {
   it('sends only the fields given', async () => {
     vi.spyOn(console, 'log').mockImplementation(() => undefined)

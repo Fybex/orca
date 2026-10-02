@@ -25,6 +25,7 @@ export {
 export type { ComputerActionFollowUpTarget } from './computer-format'
 export {
   formatFolderList,
+  formatFolderOrder,
   formatFolderRepos,
   formatFolderSet,
   formatFolderShow
