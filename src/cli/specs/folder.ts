@@ -34,8 +34,8 @@ export const FOLDER_COMMAND_SPECS: CommandSpec[] = [
     allowedFlags: [...GLOBAL_FLAGS, 'group', 'name', 'feature', 'repo'],
     repeatableFlags: ['repo'],
     notes: [
-      "--feature puts the workspace in its own folder beside Orca's worktrees directory (by default ~/orca/features/<name-slug>), holding one link per attached worktree. Local project groups only.",
-      'Each --repo creates one worktree on branch <name-slug>, named after the repo and attached to the folder, one repo at a time. A failed repo is reported and the rest continue; the command then exits non-zero.'
+      "--feature puts the workspace in its own folder beside Orca's worktrees directory (by default ~/orca/features/<name-slug>, lowercase), holding one link per attached worktree. Local project groups only.",
+      'Each --repo creates one worktree on branch <name-slug> with its case kept ("ABC-1234 checkout flow" becomes ABC-1234-checkout-flow), named after the repo and attached to the folder, one repo at a time. A failed repo is reported and the rest continue; the command then exits non-zero.'
     ],
     examples: [
       'orca folder create --group Platform --name "Checkout flow" --json',
@@ -50,7 +50,7 @@ export const FOLDER_COMMAND_SPECS: CommandSpec[] = [
     repeatableFlags: ['repo'],
     notes: [
       FOLDER_SELECTOR_NOTE,
-      'Each worktree goes on branch <folder-name-slug>, named after its repo, like folder create --repo. A repo that already has a worktree attached to the folder is skipped.'
+      'Each worktree goes on branch <folder-name-slug> with its case kept, named after its repo, like folder create --repo. A repo that already has a worktree attached to the folder is skipped.'
     ],
     examples: ['orca folder add-repo --folder current --repo name:worker --json']
   },

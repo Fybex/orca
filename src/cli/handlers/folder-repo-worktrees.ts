@@ -1,7 +1,7 @@
 import type { FolderWorkspace } from '../../shared/folder-workspace-types'
 import type { Repo } from '../../shared/repo-types'
 import type { RuntimeWorktreeCreateResult, RuntimeWorktreeRecord } from '../../shared/runtime-types'
-import { toFeatureFolderName } from '../../shared/feature-folder-name'
+import { toFeatureBranchName } from '../../shared/feature-folder-name'
 import { folderWorkspaceKey } from '../../shared/workspace-scope'
 import type { FolderRepoWorktrees } from '../folder-format'
 import { RuntimeClientError, type RuntimeClient } from '../runtime-client'
@@ -14,7 +14,7 @@ export async function addReposToFolder(
   repoSelectors: readonly string[],
   attachedWorktrees: readonly Pick<RuntimeWorktreeRecord, 'id' | 'repoId'>[] = []
 ): Promise<FolderRepoWorktrees> {
-  const branchName = toFeatureFolderName(folderWorkspace.name)
+  const branchName = toFeatureBranchName(folderWorkspace.name)
   const attachedByRepoId = new Map(
     attachedWorktrees.map((worktree) => [worktree.repoId, worktree.id])
   )

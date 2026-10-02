@@ -140,7 +140,7 @@ ORCA folder rm --folder folder:<folderId> --json
 ```
 
 - Selectors: `id:<folderId>`, `folder:<folderId>`, `name:<name>`, or `active`/`current` (this terminal's folder workspace, else the folder or attached worktree containing the shell cwd).
-- Each `--repo` adds one worktree on branch `<name-slug>`, named after the repo and attached to the folder. `folder add-repo` skips repos that already have one.
+- Each `--repo` adds one worktree on branch `<name-slug>` with its case kept (`ABC-1234 checkout flow` becomes `ABC-1234-checkout-flow`), named after the repo and attached to the folder. `folder add-repo` skips repos that already have one.
 - Attached worktrees report `parentWorkspaceKey: folder:<folderId>` in `worktree show/list/ps`; folder rows in `worktree ps` list them in `childWorkspaceKeys`. To attach an existing worktree, use `ORCA worktree set --worktree <selector> --parent-worktree folder:<folderId> --json`.
 - `folder rm` stops the folder's own terminals; attached worktrees stay and move back under their repos.
 

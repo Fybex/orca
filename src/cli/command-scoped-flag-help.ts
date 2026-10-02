@@ -22,7 +22,7 @@ const COMMAND_SCOPED_FLAG_HELP: Record<string, Record<string, string>> = {
     focus: FILE_OPEN_FOCUS_HELP
   },
   'folder create': {
-    name: '--name <name>          Folder workspace name; its slug names the feature folder and branches',
+    name: '--name <name>          Folder workspace name; its slug names the feature folder (lowercase) and branches (case kept)',
     repo: FOLDER_REPO_HELP
   },
   'folder add-repo': {
