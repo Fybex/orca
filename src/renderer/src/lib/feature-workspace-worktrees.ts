@@ -4,7 +4,7 @@ import type { Repo } from '../../../shared/repo-types'
 import type { WorkspaceLineage } from '../../../shared/worktree/lineage-types'
 import { splitWorktreeId } from '../../../shared/worktree/id'
 import { folderWorkspaceKey, parseWorkspaceKey } from '../../../shared/workspace-scope'
-import { toFeatureFolderName } from '../../../shared/feature-folder-name'
+import { toFeatureBranchName } from '../../../shared/feature-folder-name'
 
 /** Repos that already have a worktree attached to the folder workspace. */
 export function getFeatureRepoIds(
@@ -31,7 +31,7 @@ export async function addReposToFeature(
   folderWorkspace: Pick<FolderWorkspace, 'id' | 'name'>,
   repos: readonly Repo[]
 ): Promise<FeatureRepoFailure[]> {
-  const branchName = toFeatureFolderName(folderWorkspace.name)
+  const branchName = toFeatureBranchName(folderWorkspace.name)
   const failures: FeatureRepoFailure[] = []
   for (const repo of repos) {
     try {

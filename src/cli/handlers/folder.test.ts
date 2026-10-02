@@ -239,7 +239,7 @@ describe('folder create', () => {
       'name:web'
     ])
     expect(creates[0]?.[1]).toMatchObject({
-      name: 'checkout-flow-dev-1-2',
+      name: 'Checkout-flow-ABC-1-2',
       displayName: 'api',
       displayNameKind: 'user',
       parentWorkspace: 'folder:fw-9',
