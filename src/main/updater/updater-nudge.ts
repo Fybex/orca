@@ -3,11 +3,13 @@ import { is } from '@electron-toolkit/utils'
 import { fetchNudge, shouldApplyNudge } from '../updater-nudge'
 import { NUDGE_ACTIVATION_COOLDOWN_MS, NUDGE_POLL_INTERVAL_MS } from './updater-state'
 import { UpdaterBuildSelection } from './updater-build-selection'
+import { isLocalBuildVersion } from './local-build-version'
 
 /** Polls update campaigns and exposes their dismissal actions. */
 export abstract class UpdaterNudge extends UpdaterBuildSelection {
   protected async checkForUpdateNudge(): Promise<void> {
-    if (!app.isPackaged || is.dev) {
+    // Why: nudges only launch background checks, which local builds skip.
+    if (!app.isPackaged || is.dev || isLocalBuildVersion(app.getVersion())) {
       return
     }
     if (this.nudgeCheckInFlight) {

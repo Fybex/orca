@@ -7,6 +7,7 @@ import {
   MAX_AUTO_UPDATE_RETRY_INTERVAL_MS
 } from './updater-state'
 import { UpdaterCheckFailure } from './updater-check-failure'
+import { isLocalBuildVersion } from './local-build-version'
 
 /** Owns timer-driven checks and the shared check-launch bookkeeping. */
 export abstract class UpdaterScheduling extends UpdaterCheckFailure {
@@ -59,6 +60,10 @@ export abstract class UpdaterScheduling extends UpdaterCheckFailure {
     }
     if (!app.isPackaged || is.dev) {
       this.sendStatus({ state: 'not-available' })
+      return false
+    }
+    // Why: only the menu's Check for Updates may offer the release over a local fork build.
+    if (isLocalBuildVersion(app.getVersion())) {
       return false
     }
     // Why: set the nudge marker before any events arrive so later checks can't inherit a stale campaign id; persisted id keeps a nudge card dismissable after relaunch.
