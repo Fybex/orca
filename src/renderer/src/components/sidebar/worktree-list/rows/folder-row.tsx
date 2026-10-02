@@ -1,4 +1,5 @@
 import React from 'react'
+import { cn } from '@/lib/utils'
 import type { VirtualItem } from '@tanstack/react-virtual'
 import type { AppState } from '@/store/types'
 import type { Repo } from '../../../../../../shared/repo-types'
@@ -13,13 +14,14 @@ import { isConfirmedStaleFolderPathStatus } from '../../../../../../shared/folde
 import { folderWorkspaceToWorktree } from '../../../../../../shared/folder-workspace-worktree'
 import WorktreeCard from '../../WorktreeCard'
 import type { WorktreeGroupBy } from '../grouping/row-types'
-import { getVirtualRowTransform } from '../viewport/virtual-rows'
+import { getWorktreeVirtualRowTransform } from '../viewport/virtual-rows'
 import { getFolderWorkspaceRowGeometry } from './indentation'
 import { getFolderWorkspaceCardPrDisplay } from '../../folder-workspace-card-pr-display'
 import { FolderPathStatusIndicator } from './FolderPathStatusIndicator'
 import type { FolderWorkspaceItemRow } from '../listing/renderable-rows'
 import { getWorktreeOptionId } from './option-dom'
 import type { LineageToggleHandler } from '../../worktree-lineage-toggle-handler-cache'
+import type { WorktreeRowDragState } from '../drag/row-state'
 
 export type FolderWorkspaceRowContext = {
   groupBy: WorktreeGroupBy
@@ -51,6 +53,9 @@ export type FolderWorkspaceRowContext = {
     worktree: Worktree,
     rowKey: string
   ) => void
+  groupKeyByRowKey: ReadonlyMap<string, string>
+  groupIndexByRowKey: ReadonlyMap<string, number>
+  worktreeDragState: WorktreeRowDragState
 }
 
 export function renderFolderWorkspaceVirtualRow(args: {
@@ -87,51 +92,73 @@ export function renderFolderWorkspaceVirtualRow(args: {
     groupDepth: row.groupDepth,
     lineageDepth: row.depth
   })
+  const dragGroupKey = ctx.groupKeyByRowKey.get(folderWorktree.id)
+  const { draggingWorktreeId, previewOffsetsByWorktreeId } = ctx.worktreeDragState
+  const isDragging = draggingWorktreeId === folderWorktree.id
   return (
     <div
       key={vItem.key}
-      id={getWorktreeOptionId(folderWorktree.id)}
-      role="option"
-      aria-selected={ctx.selectedWorktreeIds.has(folderWorktreeIdentity)}
-      aria-current={ctx.activeWorktreeId === folderWorktree.id ? 'page' : undefined}
-      data-worktree-id={folderWorktree.id}
-      data-worktree-host-identity={folderWorktreeIdentity}
-      data-worktree-row-key={folderWorktree.id}
+      role="presentation"
       data-worktree-virtual-row
       data-worktree-virtual-row-key={String(vItem.key)}
       data-worktree-virtual-row-start={vItem.start}
       data-index={vItem.index}
       ref={args.measureVirtualRowElement}
-      className="absolute left-0 right-0 top-0"
-      style={{ transform: getVirtualRowTransform(vItem.start) }}
-      onClickCapture={ctx.onRowClickCapture}
-      onPointerDown={(event) => ctx.onRowPointerDown(event, folderWorktree, folderWorktree.id)}
+      className={cn(
+        'absolute left-0 right-0 top-0',
+        isDragging && 'pointer-events-none',
+        draggingWorktreeId !== null &&
+          'transition-transform duration-150 ease-out will-change-transform'
+      )}
+      style={{
+        transform: getWorktreeVirtualRowTransform(
+          vItem.start,
+          previewOffsetsByWorktreeId.get(folderWorktree.id) ?? 0
+        )
+      }}
     >
       <div
-        className="relative"
-        style={surfaceInset > 0 ? { paddingLeft: surfaceInset } : undefined}
+        id={getWorktreeOptionId(folderWorktree.id)}
+        role="option"
+        aria-selected={ctx.selectedWorktreeIds.has(folderWorktreeIdentity)}
+        aria-current={ctx.activeWorktreeId === folderWorktree.id ? 'page' : undefined}
+        data-worktree-id={folderWorktree.id}
+        data-worktree-host-identity={folderWorktreeIdentity}
+        data-worktree-row-key={folderWorktree.id}
+        data-worktree-drag-id={dragGroupKey ? folderWorktree.id : undefined}
+        data-worktree-drag-group-key={dragGroupKey}
+        data-worktree-drag-group-index={ctx.groupIndexByRowKey.get(folderWorktree.id)}
+        // Why: the floating drag preview is the affordance, as for worktree rows.
+        className={cn('relative', isDragging && 'opacity-0')}
+        onClickCapture={ctx.onRowClickCapture}
+        onPointerDown={(event) => ctx.onRowPointerDown(event, folderWorktree, folderWorktree.id)}
       >
-        <WorktreeCard
-          worktree={folderWorktree}
-          repo={undefined}
-          isActive={ctx.activeWorktreeId === folderWorktree.id}
-          isCurrentWorktree={ctx.currentWorktreeId === folderWorktree.id}
-          contentIndent={cardContentIndent}
-          flushSurface
-          nativeDragEnabled={false}
-          onImmediateActivate={activationDisabled ? undefined : ctx.onImmediateActivate}
-          activationRowKey={folderWorktree.id}
-          onSelectionGesture={(event) => ctx.onSelectionGesture(event, folderWorktree)}
-          onContextMenuSelect={ctx.onContextMenuSelect}
-          statusPrDisplay={folderPrDisplay}
-          lineageChildCount={row.lineageChildCount}
-          lineageCollapsed={row.lineageCollapsed}
-          onLineageToggle={
-            row.lineageGroupKey ? ctx.getLineageToggleHandler(row.lineageGroupKey) : undefined
-          }
-        />
-        <div className="pointer-events-auto absolute right-3 top-1.5">
-          <FolderPathStatusIndicator status={pathStatus} />
+        <div
+          className="relative"
+          style={surfaceInset > 0 ? { paddingLeft: surfaceInset } : undefined}
+        >
+          <WorktreeCard
+            worktree={folderWorktree}
+            repo={undefined}
+            isActive={ctx.activeWorktreeId === folderWorktree.id}
+            isCurrentWorktree={ctx.currentWorktreeId === folderWorktree.id}
+            contentIndent={cardContentIndent}
+            flushSurface
+            nativeDragEnabled={false}
+            onImmediateActivate={activationDisabled ? undefined : ctx.onImmediateActivate}
+            activationRowKey={folderWorktree.id}
+            onSelectionGesture={(event) => ctx.onSelectionGesture(event, folderWorktree)}
+            onContextMenuSelect={ctx.onContextMenuSelect}
+            statusPrDisplay={folderPrDisplay}
+            lineageChildCount={row.lineageChildCount}
+            lineageCollapsed={row.lineageCollapsed}
+            onLineageToggle={
+              row.lineageGroupKey ? ctx.getLineageToggleHandler(row.lineageGroupKey) : undefined
+            }
+          />
+          <div className="pointer-events-auto absolute right-3 top-1.5">
+            <FolderPathStatusIndicator status={pathStatus} />
+          </div>
         </div>
       </div>
     </div>

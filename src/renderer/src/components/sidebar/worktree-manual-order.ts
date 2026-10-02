@@ -1,9 +1,9 @@
 import {
   buildSparseManualOrderUpdates,
   type WorktreeManualOrderUpdate
-} from './worktree-manual-order-ranks'
+} from '../../../../shared/manual-order-ranks'
 
-export type { WorktreeManualOrderUpdate } from './worktree-manual-order-ranks'
+export type { WorktreeManualOrderUpdate } from '../../../../shared/manual-order-ranks'
 
 export type WorktreeDragGroup = {
   key: string

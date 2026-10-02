@@ -4,6 +4,7 @@ import type { WorktreeDropCommitContext } from './drop-commit-context'
 import type { useWorktreeDragRuntime } from './use-runtime'
 import type { useWorktreeDragSession } from './use-session'
 import type { useWorktreeLineageDropCommit } from './use-lineage-drop-commit'
+import { useFolderWorkspaceReorder } from './use-folder-workspace-reorder'
 
 /** Bundles the drag session, lineage commits, and viewport callbacks every drop path reads. */
 export function useWorktreeDropCommitContext(args: {
@@ -24,12 +25,14 @@ export function useWorktreeDropCommitContext(args: {
     onReorderWorktrees,
     onPinWorktrees
   } = args
+  const onReorderFolderWorkspaces = useFolderWorkspaceReorder()
   return useMemo<WorktreeDropCommitContext>(
     () => ({
       scrollRef,
       workspaceStatuses,
       worktreeDragGroups: session.worktreeDragGroups,
       worktreeDragUnitGroups: session.worktreeDragUnitGroups,
+      folderWorkspaceDragGroups: session.folderWorkspaceDragGroups,
       computeWorktreeDrop: session.computeWorktreeDrop,
       computeWorktreeStatusDrop: session.computeWorktreeStatusDrop,
       refreshWorktreeDragSession: session.refreshWorktreeDragSession,
@@ -40,7 +43,8 @@ export function useWorktreeDropCommitContext(args: {
       onMoveWorktreesToStatus,
       onMoveWorktreesToStatusAtIndex,
       onReorderWorktrees,
-      onPinWorktrees
+      onPinWorktrees,
+      onReorderFolderWorkspaces
     }),
     [
       lineageDrop.clearReorderedWorktreeParents,
@@ -49,11 +53,13 @@ export function useWorktreeDropCommitContext(args: {
       onMoveWorktreesToStatus,
       onMoveWorktreesToStatusAtIndex,
       onPinWorktrees,
+      onReorderFolderWorkspaces,
       onReorderWorktrees,
       runtime.clearWorktreeDrag,
       scrollRef,
       session.computeWorktreeDrop,
       session.computeWorktreeStatusDrop,
+      session.folderWorkspaceDragGroups,
       session.refreshWorktreeDragSession,
       session.worktreeDragGroups,
       session.worktreeDragUnitGroups,

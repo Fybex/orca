@@ -154,7 +154,10 @@ export function buildWorktreeVirtualRowContext(args: BuildArgs): WorktreeVirtual
       onContextMenuSelect: props.onContextMenuSelect,
       onImmediateActivate: primaryActive.handleImmediateWorktreeRowActivate,
       onRowClickCapture: args.onRowClickCapture,
-      onRowPointerDown: args.onRowPointerDown
+      onRowPointerDown: args.onRowPointerDown,
+      groupKeyByRowKey: session.groupKeyByRowKey,
+      groupIndexByRowKey: session.groupIndexByRowKey,
+      worktreeDragState: runtime.worktreeDragState
     }
   }
 }

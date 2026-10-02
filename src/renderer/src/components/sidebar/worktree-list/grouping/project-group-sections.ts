@@ -1,7 +1,5 @@
-import {
-  compareFolderWorkspacesForDisplay,
-  type RenderableFolderWorkspace
-} from './folder-workspace-lanes'
+import type { RenderableFolderWorkspace } from './folder-workspace-lanes'
+import { compareFolderWorkspacesForDisplay } from '../../../../../../shared/folder-workspace-order'
 import type { ProjectGroup } from '../../../../../../shared/project-group-types'
 import type { ProjectOrderBy } from '../../../../../../shared/ui-chrome-types'
 import { getEffectiveProjectGroupManualRank } from '../../../../../../shared/project-groups'

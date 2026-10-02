@@ -9,7 +9,10 @@ import {
 } from '../../../../../../shared/worktree/host-qualified-identity'
 import WorktreeCard, { type ActiveSurfaceVariant } from '../../WorktreeCard'
 import { PINNED_GROUP_KEY } from '../grouping/group-keys'
-import { isFolderWorkspaceSectionKey } from '../grouping/folder-workspace-attached-rows'
+import {
+  getFolderWorkspaceKeyForSection,
+  isFolderWorkspaceSectionKey
+} from '../grouping/folder-workspace-attached-rows'
 import type { WorktreeGroupBy } from '../grouping/row-types'
 import {
   getFolderBackedRepoWorktreeCardContentIndent,
@@ -137,6 +140,11 @@ export function renderWorktreeItemRow(
     ? getLineageChildrenInlineStyle(lineageChildrenInlineOffset ?? LINEAGE_CHILDREN_INLINE_OFFSET)
     : undefined
   const worktreeDragGroupKey = ctx.groupKeyByRowKey.get(itemRow.rowKey)
+  // Why: rows attached under a folder row travel with it when the folder row is dragged.
+  const parentFolderKey = getFolderWorkspaceKeyForSection(itemRow.sectionKey)
+  const draggingId = ctx.worktreeDragState.draggingWorktreeId
+  const isDragging =
+    draggingId !== null && (draggingId === itemRow.worktree.id || draggingId === parentFolderKey)
   const worktreeIdentity = getWorktreeHostIdentity(itemRow.worktree)
   const isLineageDropTarget =
     ctx.worktreeDragState.draggingWorktreeId &&
@@ -161,10 +169,16 @@ export function renderWorktreeItemRow(
       data-worktree-drag-id={worktreeDragGroupKey ? itemRow.worktree.id : undefined}
       data-worktree-drag-group-key={worktreeDragGroupKey}
       data-worktree-drag-group-index={ctx.groupIndexByRowKey.get(itemRow.rowKey)}
+      data-worktree-drag-unit-member-group-key={
+        parentFolderKey ? ctx.groupKeyByRowKey.get(parentFolderKey) : undefined
+      }
+      data-worktree-drag-unit-member-group-index={
+        parentFolderKey ? ctx.groupIndexByRowKey.get(parentFolderKey) : undefined
+      }
       className={cn(
         // Why: don't transition 'transform' — it lags/flashes when TanStack Virtual repositions adjacent rows.
         'relative transition-[opacity,filter] duration-150 ease-out',
-        ctx.worktreeDragState.draggingWorktreeId === itemRow.worktree.id &&
+        isDragging &&
           // Why: the fixed drag preview is the affordance; a translucent source row would bleed through sticky headers/footers.
           'pointer-events-none opacity-0'
       )}

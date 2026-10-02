@@ -24,6 +24,7 @@ export type WorktreeDropCommitContext = {
   workspaceStatuses: readonly WorkspaceStatusDefinition[]
   worktreeDragGroups: readonly WorktreeDragGroup[]
   worktreeDragUnitGroups: readonly WorktreeDragUnitGroup[]
+  folderWorkspaceDragGroups: readonly WorktreeDragGroup[]
   computeWorktreeDrop: (pointerY: number) => WorktreeSidebarDropPreview | null
   computeWorktreeStatusDrop: (
     request: WorktreeStatusDropRequest
@@ -48,4 +49,9 @@ export type WorktreeDropCommitContext = {
     dropIndex: number
   }) => void
   onPinWorktrees: (worktreeIds: readonly string[]) => void
+  onReorderFolderWorkspaces: (args: {
+    groupKeys: readonly string[]
+    movedKey: string
+    dropIndex: number
+  }) => void
 }
