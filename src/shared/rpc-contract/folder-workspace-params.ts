@@ -36,7 +36,9 @@ export const FolderWorkspaceCreate = z
     linkedTask: FolderWorkspaceLinkedTask.optional(),
     linkedTaskSourceContext: TaskSourceContextSchema.nullable().optional(),
     createdWithAgent: z.string().refine(isTuiAgent).optional(),
-    pendingFirstAgentMessageRename: z.boolean().optional()
+    pendingFirstAgentMessageRename: z.boolean().optional(),
+    // Why optional: an older host strips it and creates a plain folder workspace at the group root.
+    featureFolder: z.boolean().optional()
   })
   .superRefine(assertLinkedTaskSourceContextMatch)
 

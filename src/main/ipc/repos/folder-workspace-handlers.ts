@@ -11,12 +11,7 @@ import {
 import { getSshFilesystemProvider } from '../../providers/ssh-filesystem-dispatch'
 import type { OrcaRuntimeService } from '../../runtime/orca-runtime'
 import { notifyReposChanged } from './repos-changed-notification'
-import {
-  getFeatureFoldersRoot,
-  isFeatureFolderPath,
-  removeFeatureFolder,
-  reserveFeatureFolder
-} from '../../feature-folders/feature-folder-links'
+import { reserveFeatureFolderForGroup } from '../../feature-folders/feature-folder-links'
 import {
   scheduleFeatureFolderSync,
   startFeatureFolderSync
@@ -56,15 +51,14 @@ export function registerFolderWorkspaceHandlers(
       )
       const projectGroups = store.getProjectGroups()
       const group = projectGroups.find((entry) => entry.id === args.projectGroupId)
-      if (featureFolder && (args.connectionId ?? group?.connectionId)) {
-        throw new Error('feature_folder_requires_local_group')
-      }
       const folderPath =
         group && featureFolder
-          ? await reserveFeatureFolder(
-              getFeatureFoldersRoot(store.getSettings().workspaceDir),
-              args.name || group.name
-            )
+          ? await reserveFeatureFolderForGroup({
+              workspaceDir: store.getSettings().workspaceDir,
+              group,
+              name: args.name,
+              connectionId: args.connectionId
+            })
           : typeof args.folderPath === 'string' && args.folderPath.trim().length > 0
             ? args.folderPath
             : group?.parentPath
@@ -138,22 +132,8 @@ export function registerFolderWorkspaceHandlers(
       rawArgs,
       'invalid_folder_workspace_delete_args'
     )
-    const workspace = store.getFolderWorkspace(args.folderWorkspaceId)
-    // Why: the runtime owns PTY/browser/session teardown and notifies on success.
+    // Why: the runtime owns PTY/browser/session and feature-folder teardown and notifies on success.
     const { deleted } = await runtime.deleteFolderWorkspace(args.folderWorkspaceId)
-    if (
-      deleted &&
-      workspace &&
-      !workspace.connectionId &&
-      isFeatureFolderPath(
-        getFeatureFoldersRoot(store.getSettings().workspaceDir),
-        workspace.folderPath
-      )
-    ) {
-      await removeFeatureFolder(workspace.folderPath).catch((error: unknown) => {
-        console.warn('[feature-folders] could not remove feature folder:', error)
-      })
-    }
     scheduleFeatureFolderSync()
     return deleted
   })

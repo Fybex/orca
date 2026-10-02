@@ -13,6 +13,10 @@ import {
 import { getSshFilesystemProvider } from '../providers/ssh-filesystem-dispatch'
 import type { RuntimeStore } from './runtime-store-contract'
 import { folderWorkspaceKey } from '../../shared/workspace-scope'
+import {
+  removeDeletedFeatureFolder,
+  reserveFeatureFolderForGroup
+} from '../feature-folders/feature-folder-links'
 
 type RuntimeProjectGroupDependencies = {
   getStore: () => RuntimeStore | null
@@ -129,17 +133,26 @@ export class RuntimeProjectGroupController {
     linkedTaskSourceContext?: FolderWorkspace['linkedTaskSourceContext']
     createdWithAgent?: FolderWorkspace['createdWithAgent']
     pendingFirstAgentMessageRename?: boolean
+    featureFolder?: boolean
   }): Promise<FolderWorkspace> {
     const store = this.deps.getStore()
     if (!store?.createFolderWorkspace) {
       throw new Error('runtime_unavailable')
     }
+    const { featureFolder, ...workspaceInput } = input
     const projectGroups = store.getProjectGroups?.() ?? []
     const group = projectGroups.find((entry) => entry.id === input.projectGroupId)
     const folderPath =
-      typeof input.folderPath === 'string' && input.folderPath.trim().length > 0
-        ? input.folderPath
-        : group?.parentPath
+      group && featureFolder
+        ? await reserveFeatureFolderForGroup({
+            workspaceDir: store.getSettings().workspaceDir,
+            group,
+            name: input.name,
+            connectionId: input.connectionId
+          })
+        : typeof input.folderPath === 'string' && input.folderPath.trim().length > 0
+          ? input.folderPath
+          : group?.parentPath
     if (!group || !folderPath) {
       throw new Error('folder_workspace_project_group_not_found')
     }
@@ -155,7 +168,8 @@ export class RuntimeProjectGroupController {
     )
     assertFolderWorkspacePathUsable(status)
     const workspace = store.createFolderWorkspace({
-      ...input,
+      ...workspaceInput,
+      folderPath,
       creatorProvenance: input.creatorProvenance ?? { kind: 'host' }
     })
     this.deps.notifyReposChanged()
@@ -233,6 +247,9 @@ export class RuntimeProjectGroupController {
     }
     const deleted = store.removeFolderWorkspace(folderWorkspaceId)
     if (deleted) {
+      if (workspace) {
+        await removeDeletedFeatureFolder(store.getSettings().workspaceDir, workspace)
+      }
       this.deps.notifyReposChanged()
     }
     return { deleted }
