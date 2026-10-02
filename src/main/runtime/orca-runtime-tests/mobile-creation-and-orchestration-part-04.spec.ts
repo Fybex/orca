@@ -147,6 +147,7 @@ describe('OrcaRuntimeService', () => {
           hasHostSidebarActivity: true,
           parentWorktreeId: null,
           childWorktreeIds: [],
+          parentWorkspaceKey: null,
           displayName: 'foo',
           workspaceStatus: 'in-progress',
           sortOrder: 0,

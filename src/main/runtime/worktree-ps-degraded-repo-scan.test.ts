@@ -117,7 +117,9 @@ function makeStore(options: StoreOptions = {}) {
     },
     removeWorktreeMeta: () => {},
     getAllWorktreeLineage: () => lineageById,
-    getAllWorkspaceLineage: () => ({ [`worktree:${WORKTREE_ID}`]: { parentWorkspaceKey: null } }),
+    getAllWorkspaceLineage: () => ({
+      [`worktree:${WORKTREE_ID}`]: { parentWorkspaceKey: `worktree:${MAIN_WORKTREE_ID}` }
+    }),
     removeWorktreeLineage: options.removeWorktreeLineage ?? vi.fn(),
     removeWorkspaceLineage: options.removeWorkspaceLineage ?? vi.fn(),
     getGitHubCache: () => undefined as never,

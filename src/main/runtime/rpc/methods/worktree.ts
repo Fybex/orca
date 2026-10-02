@@ -31,6 +31,7 @@ import {
 } from '../../../../shared/rpc-contract/worktree-params'
 import { WORKTREE_CATALOG_METHODS } from './worktree-catalog-methods'
 import { readsWorktreeRemovalMarker } from '../worktree-removal-marker-projection'
+import { projectFolderWorkspaceParents } from '../worktree-folder-parent-projection'
 
 export const WORKTREE_METHODS = [
   ...WORKTREE_CATALOG_METHODS,
@@ -58,9 +59,12 @@ export const WORKTREE_METHODS = [
     name: 'worktree.show',
     permission: 'workspace',
     params: WorktreeSelector,
-    handler: async (params, { runtime }) => ({
-      worktree: await runtime.showManagedWorktree(params.worktree)
-    })
+    handler: async (params, { runtime }) => {
+      const [worktree] = await projectFolderWorkspaceParents(runtime, [
+        await runtime.showManagedWorktree(params.worktree)
+      ])
+      return { worktree }
+    }
   }),
   defineMethod({
     name: 'worktree.sleep',
