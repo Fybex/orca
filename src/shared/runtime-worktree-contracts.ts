@@ -1,6 +1,7 @@
 import type { AgentStatusState, AgentType, AgentWorkingMode } from './agent-status-types'
 import type { AgentMainAgentStatus } from './main-agent-status'
 import type { BaseRefSearchResult, Repo } from './repo-types'
+import type { WorkspaceKey } from './folder-workspace-types'
 import type { CreateWorktreeResult, RemoveWorktreeResult } from './worktree/create-types'
 import type {
   WorkspaceLineage,
@@ -52,6 +53,10 @@ export type RuntimeWorktreePsSummary = {
   parentWorktreeInstanceId?: string
   parentWorktreeId: string | null
   childWorktreeIds: string[]
+  /** The folder workspace a git row is attached to. Absent from hosts that predate the field. */
+  parentWorkspaceKey?: WorkspaceKey | null
+  /** Worktrees attached to a folder-workspace row. Absent from hosts that predate the field. */
+  childWorkspaceKeys?: WorkspaceKey[]
   displayName: string
   workspaceStatus: string
   sortOrder: number
@@ -112,6 +117,8 @@ export type RuntimeWorktreeStatus = 'active' | 'working' | 'permission' | 'done'
 export type RuntimeWorktreeRecord = Worktree & {
   parentWorktreeId: string | null
   childWorktreeIds: string[]
+  /** The folder workspace this worktree is attached to. Absent from hosts that predate the field. */
+  parentWorkspaceKey?: WorkspaceKey | null
   lineage: WorktreeLineage | null
   workspaceLineage?: WorkspaceLineage | null
   git: GitWorktreeInfo

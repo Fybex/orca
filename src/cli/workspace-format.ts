@@ -4,6 +4,7 @@ import type {
   RuntimeRepoSearchRefs,
   RuntimeWorktreeListResult,
   RuntimeWorktreePsResult,
+  RuntimeWorktreePsSummary,
   RuntimeWorktreeRecord
 } from '../shared/runtime-types'
 import type { MemorySnapshot, WorktreeMemory } from '../shared/process-stats-types'
@@ -139,13 +140,26 @@ export function formatWorktreePs(result: WithAnnotatedHostScope<RuntimeWorktreeP
   const body = result.worktrees
     .map(
       (worktree) =>
-        `${worktree.repo} ${worktree.branch}  host=${worktree.hostId ?? 'unverifiable'}  live:${worktree.liveTerminalCount}  pty:${worktree.hasAttachedPty ? 'yes' : 'no'}  unread:${worktree.unread ? 'yes' : 'no'}\n${worktree.path}${worktree.preview ? `\npreview: ${worktree.preview}` : ''}`
+        `${worktree.repo} ${worktree.branch}  host=${worktree.hostId ?? 'unverifiable'}  live:${worktree.liveTerminalCount}  pty:${worktree.hasAttachedPty ? 'yes' : 'no'}  unread:${worktree.unread ? 'yes' : 'no'}\n${worktree.path}${formatFolderWorkspaceLineage(worktree)}${worktree.preview ? `\npreview: ${worktree.preview}` : ''}`
     )
     .join('\n\n')
   const bodyWithScope = `${body}\n\n${scope}`
   return result.truncated
     ? `${bodyWithScope}\ntruncated: showing ${result.worktrees.length} of ${result.totalCount}`
     : bodyWithScope
+}
+
+// Omitted when empty, so rows outside a folder workspace and hosts that predate the fields print as before.
+function formatFolderWorkspaceLineage(
+  worktree: Pick<RuntimeWorktreePsSummary, 'parentWorkspaceKey' | 'childWorkspaceKeys'>
+): string {
+  const parent = worktree.parentWorkspaceKey
+    ? `\nparentWorkspaceKey: ${worktree.parentWorkspaceKey}`
+    : ''
+  const children = worktree.childWorkspaceKeys?.length
+    ? `\nchildWorkspaceKeys: ${worktree.childWorkspaceKeys.join(',')}`
+    : ''
+  return parent + children
 }
 
 export function formatRepoList(result: RuntimeRepoList): string {
@@ -181,7 +195,7 @@ export function formatWorktreeList(
   const body = result.worktrees
     .map((worktree) => {
       const childCount = worktree.childWorktreeIds?.length ?? 0
-      return `${String(worktree.id)}  ${String(worktree.branch)}  host=${String(worktree.hostId ?? 'unverifiable')}  ${String(worktree.path)}\ndisplayName: ${String(worktree.displayName ?? '')}\nparentWorktreeId: ${String(worktree.parentWorktreeId ?? 'null')}\nchildWorktreeIds: ${childCount > 0 ? worktree.childWorktreeIds.join(',') : '[]'}\nlinkedIssue: ${String(worktree.linkedIssue ?? 'null')}\ncomment: ${String(worktree.comment ?? '')}`
+      return `${String(worktree.id)}  ${String(worktree.branch)}  host=${String(worktree.hostId ?? 'unverifiable')}  ${String(worktree.path)}\ndisplayName: ${String(worktree.displayName ?? '')}\nparentWorktreeId: ${String(worktree.parentWorktreeId ?? 'null')}\nchildWorktreeIds: ${childCount > 0 ? worktree.childWorktreeIds.join(',') : '[]'}${formatFolderWorkspaceLineage(worktree)}\nlinkedIssue: ${String(worktree.linkedIssue ?? 'null')}\ncomment: ${String(worktree.comment ?? '')}`
     })
     .join('\n\n')
   const bodyWithScope = `${body}\n\n${scope}`

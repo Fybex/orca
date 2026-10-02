@@ -1,6 +1,11 @@
 import { DEFAULT_WORKSPACE_STATUS_ID } from '../../shared/workspace-statuses'
 import type { RuntimeWorktreePsSummary } from '../../shared/runtime-types'
 import { folderWorkspaceToWorktree } from '../../shared/folder-workspace-worktree'
+import { folderWorkspaceKey } from '../../shared/workspace-scope'
+import {
+  getFolderWorkspaceChildKeys,
+  getFolderWorkspaceParentKeys
+} from '../../shared/worktree/folder-workspace-parent'
 import type { RuntimeStore } from './runtime-store-contract'
 import type { ResolvedWorktree } from './runtime-worktree-path-identity'
 
@@ -12,6 +17,13 @@ export function buildRuntimeWorktreePsSummaries(args: {
   const repoById = new Map((args.store?.getRepos() ?? []).map((repo) => [repo.id, repo]))
   const summaries = new Map<string, RuntimeWorktreePsSummary>()
   const ghCache = args.store?.getGitHubCache?.()
+  const folderWorkspaces = args.store?.getFolderWorkspaces?.() ?? []
+  const folderParentKeys = getFolderWorkspaceParentKeys(
+    args.resolvedWorktrees,
+    args.store?.getAllWorkspaceLineage?.() ?? {},
+    folderWorkspaces
+  )
+  const folderChildKeys = getFolderWorkspaceChildKeys(folderParentKeys)
   for (const worktree of args.resolvedWorktrees) {
     const meta =
       args.store?.getWorktreeMeta?.(worktree.id) ?? args.store?.getAllWorktreeMeta()[worktree.id]
@@ -51,6 +63,7 @@ export function buildRuntimeWorktreePsSummaries(args: {
         : {}),
       parentWorktreeId: worktree.parentWorktreeId,
       childWorktreeIds: worktree.childWorktreeIds,
+      parentWorkspaceKey: folderParentKeys.get(worktree.id) ?? null,
       displayName: worktree.displayName,
       workspaceStatus: meta?.workspaceStatus ?? DEFAULT_WORKSPACE_STATUS_ID,
       sortOrder: meta?.sortOrder ?? 0,
@@ -78,7 +91,7 @@ export function buildRuntimeWorktreePsSummaries(args: {
   const projectGroupById = new Map(
     (args.store?.getProjectGroups?.() ?? []).map((group) => [group.id, group])
   )
-  for (const folderWorkspace of args.store?.getFolderWorkspaces?.() ?? []) {
+  for (const folderWorkspace of folderWorkspaces) {
     const projectGroup = projectGroupById.get(folderWorkspace.projectGroupId)
     if (!projectGroup?.parentPath) {
       continue
@@ -97,6 +110,7 @@ export function buildRuntimeWorktreePsSummaries(args: {
       ...(worktree.instanceId !== undefined ? { worktreeInstanceId: worktree.instanceId } : {}),
       parentWorktreeId: null,
       childWorktreeIds: [],
+      childWorkspaceKeys: folderChildKeys.get(folderWorkspaceKey(folderWorkspace.id)) ?? [],
       displayName: worktree.displayName,
       workspaceStatus: worktree.workspaceStatus ?? DEFAULT_WORKSPACE_STATUS_ID,
       sortOrder: worktree.sortOrder ?? 0,

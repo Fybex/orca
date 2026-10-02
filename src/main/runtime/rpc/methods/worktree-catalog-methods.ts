@@ -6,6 +6,7 @@ import {
   projectWorktreePsRemovals
 } from '../worktree-removal-marker-projection'
 import { snapshotPendingWorktreeRemovals } from '../../../worktree-background-removal'
+import { projectFolderWorkspaceParents } from '../worktree-folder-parent-projection'
 import {
   WorktreeDetectedListParams,
   WorktreeListParams,
@@ -40,12 +41,16 @@ export const WORKTREE_CATALOG_METHODS = [
     params: WorktreeListParams,
     handler: async (params, context) => {
       const pendingAtScan = snapshotPendingWorktreeRemovals()
+      const result = await context.runtime.listManagedWorktrees(
+        params.repo,
+        params.limit,
+        supportsWorktreeVisibilitySourceDefaults(context)
+      )
       return projectWorktreeListRemovals(
-        await context.runtime.listManagedWorktrees(
-          params.repo,
-          params.limit,
-          supportsWorktreeVisibilitySourceDefaults(context)
-        ),
+        {
+          ...result,
+          worktrees: await projectFolderWorkspaceParents(context.runtime, result.worktrees)
+        },
         context,
         pendingAtScan
       )
