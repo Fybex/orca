@@ -41,13 +41,15 @@ function createCommandsHost(): RuntimeBrowserCommandHost {
       ]
     }))
   } as unknown as AgentBrowserBridge
-  return {
-    resolveWorktreeSelector: async () => ({ id: 'wt-1' }),
+  const host = {
+    resolveBrowserWorkspace: async () => ({ id: 'wt-1' }),
     getAgentBrowserBridge: () => bridge,
     getRuntimeBrowserPageRegistry: () => runtimeBrowserPages,
     getAvailableAuthoritativeWindow: vi.fn(() => null),
     getOffscreenBrowserBackend: vi.fn(() => null)
-  } as unknown as RuntimeBrowserCommandHost
+  }
+  // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: screencast commands read only the stubbed host members.
+  return host as unknown as RuntimeBrowserCommandHost
 }
 
 describe('RuntimeBrowserCommands screencast fanout', () => {

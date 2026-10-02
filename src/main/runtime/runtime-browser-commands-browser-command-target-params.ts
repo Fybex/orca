@@ -158,11 +158,7 @@ export function clampOptionalNumber(
 
 export type RuntimeBrowserCommandHost = {
   getAgentBrowserBridge(): AgentBrowserBridge | null
-  resolveWorktreeSelector(selector: string): Promise<{
-    id: string
-    repoId?: string
-    hostId?: ExecutionHostId
-  }>
+  // Why one resolver: browser tabs live in git worktrees and folder workspaces alike.
   resolveBrowserWorkspace(selector: string): Promise<{
     id: string
     repoId?: string

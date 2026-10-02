@@ -10,6 +10,7 @@ import {
   isWslUncPathForLinuxMountedPath
 } from '../shared/cross-platform-path'
 import { parseWslUncPath } from '../shared/wsl-paths'
+import { parseWorkspaceKey } from '../shared/workspace-scope'
 import type { RuntimeClient } from './runtime-client'
 import { RuntimeClientError } from './runtime/types'
 import { getOptionalStringFlag, getRequiredStringFlag } from './flags'
@@ -170,6 +171,22 @@ export async function getRequiredWorktreeSelector(
   return await normalizeWorktreeSelectorForCaller(value, cwd, client)
 }
 
+// Why: worktree.list has no folder rows, so a folder terminal's cwd can't match; use its own key.
+async function resolveCurrentBrowserWorkspaceSelector(
+  cwd: string,
+  client: RuntimeClient
+): Promise<string> {
+  if (!client.isRemote) {
+    for (const value of [process.env.ORCA_WORKSPACE_ID, process.env.ORCA_WORKTREE_ID]) {
+      const key = value?.trim() ?? ''
+      if (parseWorkspaceKey(key)?.type === 'folder') {
+        return `id:${key}`
+      }
+    }
+  }
+  return await resolveCurrentWorktreeSelector(cwd, client)
+}
+
 // Why: local browser commands default to the current worktree by auto-resolving
 // from cwd. Remote commands omit worktree so the runtime uses server-side focus.
 export async function getBrowserWorktreeSelector(
@@ -184,7 +201,7 @@ export async function getBrowserWorktreeSelector(
   if (value) {
     if (value === 'active' || value === 'current') {
       assertLocalCwdWorktreeSelector(value, client)
-      return await resolveCurrentWorktreeSelector(cwd, client)
+      return await resolveCurrentBrowserWorkspaceSelector(cwd, client)
     }
     return await normalizeWorktreeSelectorForCaller(value, cwd, client)
   }
@@ -241,7 +258,7 @@ export async function getBrowserCommandTarget(
     assertLocalCwdWorktreeSelector(explicitWorktree, client)
     return {
       page,
-      worktree: await resolveCurrentWorktreeSelector(cwd, client)
+      worktree: await resolveCurrentBrowserWorkspaceSelector(cwd, client)
     }
   }
   return {
