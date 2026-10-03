@@ -5972,7 +5972,8 @@
           "deleteWorktree": "Delete Worktree",
           "sleepWithDescendants": "Sleep with Descendants ({{value0}})",
           "sleepWithDescendantsDescription": "Close active panels in this workspace and every nested descendant to free up memory and CPU.",
-          "deleteWithDescendants": "Delete with Descendants…"
+          "deleteWithDescendants": "Delete with Descendants…",
+          "addRepos": "Add repos…"
         },
         "WorktreeList": {
           "7a8b9c0d1e": "Update required",
@@ -6018,7 +6019,8 @@
           "groupRenameFailedDesc": "Orca could not confirm the new name with the group's host. Recheck the group after reconnecting.",
           "failedNestWorkspace": "Failed to nest workspace",
           "sidebarRowMissing": "Target no longer exists",
-          "failedUnnestWorkspace": "Failed to unnest workspace"
+          "failedUnnestWorkspace": "Failed to unnest workspace",
+          "newFeature": "New feature…"
         },
         "WorktreeMetaDialog": {
           "3db0a2a593": "Cancel",
@@ -6283,7 +6285,8 @@
               "682ed5d551": "Closed",
               "7c2f009786": "In progress",
               "6798dc7c94": "In review",
-              "5076efc3d2": "Done"
+              "5076efc3d2": "Done",
+              "quietCatalog": "{{value0}} more projects"
             }
           }
         },
@@ -6668,6 +6671,21 @@
           "title": "Sort changed to Manual",
           "description": "Manual keeps workspaces where you drop them.",
           "restore": "Back to {{label}}"
+        },
+        "FeatureWorkspaceDialog": {
+          "reposFailed": "Some repos were not added: {{value0}}",
+          "createFailed": "Could not create the feature",
+          "addTitle": "Add repos to {{value0}}",
+          "title": "New feature",
+          "addDescription": "Each repo gets a worktree on the feature branch, nested under it.",
+          "description": "Its terminal opens in a folder of its own, with a link to each repo worktree. Pick repos now or add them later.",
+          "name": "Feature name",
+          "repos": "Repos",
+          "alreadyAdded": "already added",
+          "cancel": "Cancel",
+          "creating": "Creating...",
+          "add": "Add",
+          "create": "Create"
         }
       },
       "shared": {
@@ -9638,6 +9656,12 @@
               "kw": {
                 "cursor": "cursor"
               }
+            },
+            "quietProjectGroups": {
+              "title": "Quiet project groups",
+              "description": "Inside project groups, hide primary checkouts and fold projects with no other worktree into one line.",
+              "group": "group",
+              "primary": "primary"
             }
           }
         },
