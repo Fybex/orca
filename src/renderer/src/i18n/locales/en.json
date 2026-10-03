@@ -12727,6 +12727,10 @@
           "unavailable": "{{value0}} (unavailable)",
           "description": "Accounts, detected agents and terminal options below are for this host.",
           "unavailableNotice": "This server is no longer saved, so nothing can be shown for it. Choose another host at the top of Settings."
+        },
+        "agent-read-on-focus-copy": {
+          "title": "Mark agents read when their terminal has focus",
+          "description": "Clicking or typing in an agent terminal marks it read, like opening its Dashboard card. A turn that finishes while you are in its terminal is read too."
         }
       },
       "right": {
