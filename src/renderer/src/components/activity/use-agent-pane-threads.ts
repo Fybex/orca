@@ -15,6 +15,8 @@ import {
   EMPTY_PAIRED_DEVICE_IDS_BY_ENVIRONMENT,
   getPairedDeviceIdsByEnvironment
 } from '@/components/sidebar/workspace-creator-visibility'
+import { resolveAgentRowPaneLiveTitle } from '../dashboard/agent-row-pane-live-title'
+import { parsePaneKey } from '../../../../shared/stable-pane-id'
 
 const EMPTY_PANE_KEYS: ReadonlySet<string> = new Set()
 import { filterThreadsByActivityScope, resolveActivityScopeRepoIds } from './activity-scope-filter'
@@ -141,6 +143,8 @@ export function useAgentPaneThreads(args: {
   )
   // Why: agentStatusEpoch is a dep (not used in the body) so the memo recomputes when freshness boundaries expire even without new PTY data.
   const agentStatusEpoch = useAppStore((s) => s.agentStatusEpoch)
+  const terminalLayoutsByTabId = useAppStore((s) => s.terminalLayoutsByTabId)
+  const runtimePaneTitlesByTabId = useAppStore((s) => s.runtimePaneTitlesByTabId)
 
   // Why per-hook caches: unchanged panes keep their exact event/snapshot/thread object
   // identities across rebuilds, so a status write to one agent leaves every other row's
@@ -187,11 +191,24 @@ export function useAgentPaneThreads(args: {
           events: allEvents,
           liveAgentByPaneKey,
           paneEntryByPaneKey,
-          generatedTitlesEnabled: storeData.generatedTitlesEnabled
+          generatedTitlesEnabled: storeData.generatedTitlesEnabled,
+          resolvePaneLiveTitle: (paneKey, tabId) =>
+            resolveAgentRowPaneLiveTitle(
+              terminalLayoutsByTabId[tabId],
+              runtimePaneTitlesByTabId[tabId],
+              parsePaneKey(paneKey)?.leafId
+            )
         },
         threadReuseCacheRef.current
       ),
-    [allEvents, liveAgentByPaneKey, paneEntryByPaneKey, storeData.generatedTitlesEnabled]
+    [
+      allEvents,
+      liveAgentByPaneKey,
+      paneEntryByPaneKey,
+      storeData.generatedTitlesEnabled,
+      terminalLayoutsByTabId,
+      runtimePaneTitlesByTabId
+    ]
   )
 
   const selectedPaneKeyIsLive =

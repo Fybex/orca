@@ -100,6 +100,27 @@ describe('getActivityThreadTaskTitle', () => {
     ).toBe('Fix logout')
   })
 
+  it('prefers the session name over prompts, like the sidebar row', () => {
+    const entry = {
+      prompt: 'do it yourself, can you do it now please?',
+      agentType: 'claude' as const,
+      stateHistory: []
+    }
+    const namedTab = { ...tab, generatedTitle: undefined, title: '✳ Schedule UX round 2' }
+    expect(
+      getActivityThreadTaskTitle({ entry, tab: namedTab, generatedTitlesEnabled: false })
+    ).toBe('Schedule UX round 2')
+    // A split tab whose own pane title is unknown must not borrow a sibling's name.
+    expect(
+      getActivityThreadTaskTitle({
+        entry,
+        tab: namedTab,
+        generatedTitlesEnabled: false,
+        paneLiveTitle: null
+      })
+    ).toBe('do it yourself, can you do it now please?')
+  })
+
   it('ignores the generated title when generated titles are disabled', () => {
     expect(
       getActivityThreadTaskTitle({

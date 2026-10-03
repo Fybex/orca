@@ -71,10 +71,14 @@ export function buildAgentPaneThreads(
     liveAgentByPaneKey: Record<string, ActivityLiveAgentSnapshot>
     paneEntryByPaneKey?: Record<string, AgentStatusEntry>
     generatedTitlesEnabled?: boolean
+    /** A split tab's own pane title for a row; undefined keeps the tab title. */
+    resolvePaneLiveTitle?: (paneKey: string, tabId: string) => string | null | undefined
   },
   reuseCache?: AgentPaneThreadReuseCache
 ): AgentPaneThread[] {
   const generatedTitlesEnabled = args.generatedTitlesEnabled === true
+  const paneLiveTitle = (paneKey: string, tabId: string): string | null | undefined =>
+    args.resolvePaneLiveTitle?.(paneKey, tabId)
   const byPaneKey = new Map<string, AgentPaneThread>()
   for (const event of args.events) {
     const paneKey = event.entry.paneKey
@@ -82,7 +86,11 @@ export function buildAgentPaneThreads(
     if (!existing) {
       byPaneKey.set(paneKey, {
         paneKey,
-        paneTitle: paneTitleForEvent(event, generatedTitlesEnabled),
+        paneTitle: paneTitleForEvent(
+          event,
+          generatedTitlesEnabled,
+          paneLiveTitle(paneKey, event.tab.id)
+        ),
         worktree: event.worktree,
         repo: event.repo,
         tab: event.tab,
@@ -107,7 +115,11 @@ export function buildAgentPaneThreads(
     existing.latestTimestamp = Math.max(existing.latestTimestamp, event.timestamp)
     if (!existing.latestEvent || event.observedAt > existing.latestEvent.observedAt) {
       existing.latestEvent = event
-      existing.paneTitle = paneTitleForEvent(event, generatedTitlesEnabled)
+      existing.paneTitle = paneTitleForEvent(
+        event,
+        generatedTitlesEnabled,
+        paneLiveTitle(paneKey, event.tab.id)
+      )
       existing.agentType = event.agentType
       existing.tab = event.tab
       existing.responsePreview = statusPreviewForEntry(
@@ -123,7 +135,12 @@ export function buildAgentPaneThreads(
     if (!existing) {
       byPaneKey.set(paneKey, {
         paneKey,
-        paneTitle: paneTitleForEntry(liveAgent.entry, liveAgent.tab, generatedTitlesEnabled),
+        paneTitle: paneTitleForEntry(
+          liveAgent.entry,
+          liveAgent.tab,
+          generatedTitlesEnabled,
+          paneLiveTitle(paneKey, liveAgent.tab.id)
+        ),
         worktree: liveAgent.worktree,
         repo: liveAgent.repo,
         tab: liveAgent.tab,
@@ -140,7 +157,12 @@ export function buildAgentPaneThreads(
       continue
     }
     // Why: row title/time/target must follow the active turn (not historical events) so a running agent never shows the previous prompt as primary.
-    existing.paneTitle = paneTitleForEntry(liveAgent.entry, liveAgent.tab, generatedTitlesEnabled)
+    existing.paneTitle = paneTitleForEntry(
+      liveAgent.entry,
+      liveAgent.tab,
+      generatedTitlesEnabled,
+      paneLiveTitle(paneKey, liveAgent.tab.id)
+    )
     existing.worktree = liveAgent.worktree
     existing.repo = liveAgent.repo
     existing.tab = liveAgent.tab

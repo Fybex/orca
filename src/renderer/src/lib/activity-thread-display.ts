@@ -11,6 +11,7 @@ import {
   orchestrationLabelsMatchLiveDispatch
 } from './agent-row-primary-text'
 import { formatAgentToolPreview } from './agent-row-tool-preview'
+import { getAgentRowConversationName } from '../../../shared/agent-row-conversation-name'
 import { agentVerdictStatusLine } from './agent-verdict-status-line'
 
 // Why: follow-up replies ("yes", "ok proceed") are valid hook prompts but are
@@ -96,9 +97,22 @@ export function getActivityThreadWorkspaceTitle(
 
 /** Stable task identity for Activity sidebar rows — not the latest follow-up turn. */
 export function getActivityThreadTaskTitle(args: {
-  entry: Pick<AgentStatusEntry, 'orchestration' | 'prompt' | 'stateHistory'>
-  tab: Pick<TerminalTab, 'customTitle' | 'generatedTitle' | 'title' | 'defaultTitle'>
+  entry: Pick<
+    AgentStatusEntry,
+    'orchestration' | 'prompt' | 'stateHistory' | 'agentType' | 'providerSession'
+  >
+  tab: Pick<
+    TerminalTab,
+    | 'customTitle'
+    | 'quickCommandLabel'
+    | 'aiVaultTitle'
+    | 'generatedTitle'
+    | 'title'
+    | 'defaultTitle'
+  >
   generatedTitlesEnabled: boolean
+  /** This pane's own live title in a split tab; see getAgentRowConversationName. */
+  paneLiveTitle?: string | null
 }): string {
   const customTitle = args.tab.customTitle?.trim()
   if (customTitle) {
@@ -110,11 +124,16 @@ export function getActivityThreadTaskTitle(args: {
     return orchestrationLabel
   }
 
-  // Why: respect the user's tabAutoGenerateTitle setting — a disabled generated
-  // title must not resurface here (mirrors resolveTerminalTabTitle's gate).
-  const generatedTitle = args.generatedTitlesEnabled ? args.tab.generatedTitle?.trim() : ''
-  if (generatedTitle) {
-    return generatedTitle
+  // Why: the session name the sidebar and Dashboard show beats prompts, so a reply never becomes the title.
+  const sessionName = getAgentRowConversationName(
+    args.tab,
+    args.entry.agentType,
+    args.generatedTitlesEnabled,
+    args.paneLiveTitle,
+    args.entry.providerSession?.id
+  )
+  if (sessionName) {
+    return sessionName
   }
 
   // Why: a substantive live prompt is genuine new work and must win — the row
