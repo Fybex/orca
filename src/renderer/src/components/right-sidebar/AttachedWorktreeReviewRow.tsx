@@ -14,6 +14,7 @@ import { isFolderRepo } from '../../../../shared/repo-kind'
 import type { Repo } from '../../../../shared/repo-types'
 import type { Worktree } from '../../../../shared/worktree/types'
 import {
+  claimAttachedWorktreeCompareRefresh,
   getAttachedWorktreeDiffStats,
   loadAttachedWorktreeBranchCompare,
   reviewAttachedWorktreeChanges
@@ -76,26 +77,41 @@ export function AttachedWorktreeDiffStatsLine({
   const entries = useAppStore((s) => s.gitBranchChangesByWorktree[worktree.id])
   const lineRef = useRef<HTMLButtonElement | null>(null)
   const canCompare = repo !== undefined && !isFolderRepo(repo)
-  const hasSlot = summary !== undefined
 
   useEffect(() => {
     const node = lineRef.current
-    if (!canCompare || hasSlot || !node || typeof IntersectionObserver === 'undefined') {
+    if (!canCompare || !node || typeof IntersectionObserver === 'undefined') {
       return
     }
-    // Why: one git compare per row, only once the row scrolls into view.
+    let visible = false
+    // Why: recompute when the row, panel or window is seen again, at most once per interval.
+    const refresh = (): void => {
+      if (
+        visible &&
+        document.visibilityState !== 'hidden' &&
+        useAppStore.getState().gitBranchCompareSummaryByWorktree[worktree.id]?.status !==
+          'loading' &&
+        claimAttachedWorktreeCompareRefresh(worktree.id, Date.now())
+      ) {
+        void loadAttachedWorktreeBranchCompare(worktree, repo)
+      }
+    }
     const observer = new IntersectionObserver(
       (observed) => {
-        if (observed.some((entry) => entry.isIntersecting)) {
-          observer.disconnect()
-          void loadAttachedWorktreeBranchCompare(worktree, repo)
-        }
+        visible = observed.some((entry) => entry.isIntersecting)
+        refresh()
       },
       { rootMargin: '160px 0px' }
     )
     observer.observe(node)
-    return () => observer.disconnect()
-  }, [canCompare, hasSlot, repo, worktree])
+    window.addEventListener('focus', refresh)
+    document.addEventListener('visibilitychange', refresh)
+    return () => {
+      observer.disconnect()
+      window.removeEventListener('focus', refresh)
+      document.removeEventListener('visibilitychange', refresh)
+    }
+  }, [canCompare, repo, worktree])
 
   if (!canCompare) {
     return null

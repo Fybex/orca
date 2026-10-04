@@ -50,6 +50,20 @@ export function getAttachedWorktreeDiffStats(
   }
 }
 
+export const ATTACHED_WORKTREE_REFRESH_INTERVAL_MS = 30_000
+
+const lastAttachedCompareAt = new Map<string, number>()
+
+/** Claims one compare for this row unless it ran less than the refresh interval ago. */
+export function claimAttachedWorktreeCompareRefresh(worktreeId: string, now: number): boolean {
+  const last = lastAttachedCompareAt.get(worktreeId)
+  if (last !== undefined && now - last < ATTACHED_WORKTREE_REFRESH_INTERVAL_MS) {
+    return false
+  }
+  lastAttachedCompareAt.set(worktreeId, now)
+  return true
+}
+
 /** Fills the worktree's shared compare slots, the ones the Source Control panel reads. */
 export async function loadAttachedWorktreeBranchCompare(
   worktree: Worktree,

@@ -33,6 +33,8 @@ vi.mock('@/runtime/runtime-repo-client', () => ({
 }))
 
 import {
+  ATTACHED_WORKTREE_REFRESH_INTERVAL_MS,
+  claimAttachedWorktreeCompareRefresh,
   getAttachedWorktreeDiffStats,
   loadAttachedWorktreeBranchCompare,
   resolveAttachedWorktreePinnedBaseRef,
@@ -92,6 +94,34 @@ function makeSummary(overrides: Partial<GitBranchCompareSummary> = {}): GitBranc
 beforeEach(() => {
   vi.clearAllMocks()
   mocks.state.gitBranchCompareSummaryByWorktree = {}
+})
+
+describe('claimAttachedWorktreeCompareRefresh', () => {
+  it('allows the first compare for a row', () => {
+    expect(claimAttachedWorktreeCompareRefresh('wt-first', 1_000)).toBe(true)
+  })
+
+  it('throttles a row until the interval has passed', () => {
+    expect(claimAttachedWorktreeCompareRefresh('wt-throttle', 1_000)).toBe(true)
+    expect(
+      claimAttachedWorktreeCompareRefresh(
+        'wt-throttle',
+        1_000 + ATTACHED_WORKTREE_REFRESH_INTERVAL_MS - 1
+      )
+    ).toBe(false)
+    expect(
+      claimAttachedWorktreeCompareRefresh(
+        'wt-throttle',
+        1_000 + ATTACHED_WORKTREE_REFRESH_INTERVAL_MS
+      )
+    ).toBe(true)
+  })
+
+  it('throttles each row on its own', () => {
+    expect(claimAttachedWorktreeCompareRefresh('wt-a', 5_000)).toBe(true)
+    expect(claimAttachedWorktreeCompareRefresh('wt-b', 5_000)).toBe(true)
+    expect(claimAttachedWorktreeCompareRefresh('wt-a', 5_001)).toBe(false)
+  })
 })
 
 describe('resolveAttachedWorktreePinnedBaseRef', () => {
