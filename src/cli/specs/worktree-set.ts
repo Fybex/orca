@@ -5,7 +5,7 @@ export const WORKTREE_SET_COMMAND_SPEC: CommandSpec = {
   path: ['worktree', 'set'],
   summary: 'Update Orca metadata for a worktree',
   usage:
-    'orca worktree set --worktree <selector> [--display-name <name>] [--issue <number|null>] [--pr <number|null>] [--linear-issue <identifier-or-url|null>] [--gitlab-issue <number-or-url|null>] [--gitlab-mr <number-or-url|null>] [--comment <text>] [--workspace-status <id>] [--unread|--read] [--parent-worktree <selector>|--no-parent] [--json]',
+    'orca worktree set --worktree <selector> [--display-name <name>] [--issue <number|null>] [--pr <number|null>] [--linear-issue <identifier-or-url|null>] [--gitlab-issue <number-or-url|null>] [--gitlab-mr <number-or-url|null>] [--unlink-review] [--comment <text>] [--workspace-status <id>] [--unread|--read] [--parent-worktree <selector>|--no-parent] [--json]',
   allowedFlags: [
     ...GLOBAL_FLAGS,
     'worktree',
@@ -15,6 +15,7 @@ export const WORKTREE_SET_COMMAND_SPEC: CommandSpec = {
     'linear-issue',
     'gitlab-issue',
     'gitlab-mr',
+    'unlink-review',
     'comment',
     'workspace-status',
     'unread',
@@ -26,11 +27,13 @@ export const WORKTREE_SET_COMMAND_SPEC: CommandSpec = {
     'Workspace status ids match the board columns (defaults: todo, in-progress, in-review, completed); custom statuses use their configured id.',
     'Pass --linear-issue null to clear the Linear issue link.',
     'Pass --pr null, --gitlab-issue null, or --gitlab-mr null to clear only the matching link.',
+    'Pass --unlink-review to clear the linked GitHub PR or GitLab MR and keep the one Orca detected for the branch hidden. A new review on the same branch shows again; worktree show --json reports the hidden number as suppressedGitHubPR or suppressedGitLabMR.',
     'Each link flag updates its own field and leaves unrelated links unchanged. GitLab URLs must match the stored source project or remote; they cannot select a foreign project.'
   ],
   examples: [
     'orca worktree set --worktree active --linear-issue STA-335 --json',
     'orca worktree set --worktree active --linear-issue null --json',
+    'orca worktree set --worktree active --unlink-review --json',
     'orca worktree set --worktree active --workspace-status in-review --unread --json'
   ]
 }

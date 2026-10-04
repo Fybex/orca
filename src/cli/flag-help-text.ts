@@ -36,6 +36,8 @@ export const FLAG_HELP_TEXT: Record<string, string> = {
     '--gitlab-issue <number|url|null> Linked GitLab issue number or URL; null clears on set',
   'gitlab-mr':
     '--gitlab-mr <number|url|null> Linked GitLab merge request number or URL; null clears on set',
+  'unlink-review':
+    '--unlink-review        Clear the linked PR/MR and keep the branch-detected review hidden',
   'linear-issue':
     '--linear-issue <id|url|null> Linked Linear issue identifier or URL; null clears on set',
   json: '--json                 Emit machine-readable JSON',

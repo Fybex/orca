@@ -92,6 +92,7 @@ ORCA worktree set --worktree active --unread --json
 ORCA worktree create --repo id:<repoId> --name review-task --pr 123 --json
 ORCA worktree set --worktree active --gitlab-issue '#42' --gitlab-mr '!77' --json
 ORCA worktree set --worktree active --pr null --gitlab-mr null --json
+ORCA worktree set --worktree active --unlink-review --json
 ORCA worktree rm --worktree id:<repoId>::<worktreePath> --force --json
 ```
 
@@ -193,7 +194,10 @@ All numbers must be positive safe integers. The GitLab flags also accept HTTP(S)
 whose host/project match the workspace's stored GitLab source context or the repo's
 stored remote. They never select a foreign project or fetch a review branch. Absent
 flags leave links unchanged; literal `null` clears only the named link on `set` and
-is refused on `create`. Folder-based repos can store numeric links, but missing
+is refused on `create`. `--unlink-review` clears the linked GitHub PR or GitLab MR, or
+hides the one Orca detected for the branch, like the sidebar's Unlink; `worktree show
+--json` reports the hidden number as `suppressedGitHubPR` or `suppressedGitLabMR`, and a
+new review on the same branch shows again. Folder-based repos can store numeric links, but missing
 source/remote identity prevents URL validation and may leave provider links unavailable.
 Old runtimes that predate these existing fields may ignore them; verify with `worktree show --json`.
 

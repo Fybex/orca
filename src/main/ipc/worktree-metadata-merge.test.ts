@@ -103,4 +103,22 @@ describe('mergeWorktree identity projection', () => {
 
     expect(worktree.suppressedGitHubPR).toBe(42)
   })
+  it('projects optional GitLab MR suppression metadata', () => {
+    const worktree = mergeWorktree('repo-1', git, {
+      displayName: 'Feature',
+      comment: '',
+      linkedIssue: null,
+      linkedPR: null,
+      linkedGitLabMR: null,
+      suppressedGitLabMR: 7,
+      linkedLinearIssue: null,
+      isArchived: false,
+      isUnread: false,
+      isPinned: false,
+      sortOrder: 0,
+      lastActivityAt: 0
+    })
+
+    expect(worktree.suppressedGitLabMR).toBe(7)
+  })
 })

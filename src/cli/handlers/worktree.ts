@@ -39,6 +39,11 @@ import { getReviewTargetLinkFlags } from './worktree-review-link-flags'
 import { withSetupDecisionRecovery } from './worktree-setup-decision-recovery'
 import { assertGitLabLinkFlagProjectsMatch } from './worktree-gitlab-link-context'
 import { assertReferenceWritesSupported, getCreateReferences } from '../reference-input'
+import {
+  assertReviewUnlinkApplied,
+  hasUnlinkReviewFlag,
+  resolveReviewUnlinkUpdate
+} from './worktree-unlink-review'
 
 function getPresentStringFlag(
   flags: Map<string, string | boolean>,
@@ -245,16 +250,19 @@ export const WORKTREE_HANDLERS: Record<string, CommandHandler> = {
       'Choose either --parent-worktree or --no-parent, not both.'
     )
     const isUnread = getOptionalWorktreeUnreadFlag(flags)
+    const unlinkReview = hasUnlinkReviewFlag(flags)
     const reviewLinks = getReviewTargetLinkFlags(flags, { nullable: true })
     const linearIssueLink = getOptionalLinearIssueLinkFlag(flags, 'linear-issue', {
       allowNull: true
     })
     const worktree = await getRequiredWorktreeSelector(flags, 'worktree', cwd, client)
     await assertGitLabLinkFlagProjectsMatch(flags, client, { worktree })
+    const reviewUnlink = unlinkReview ? await resolveReviewUnlinkUpdate(client, worktree) : null
     const result = await client.call<{ worktree: RuntimeWorktreeRecord }>('worktree.set', {
       worktree,
       displayName: getOptionalStringFlag(flags, 'display-name'),
       ...reviewLinks,
+      ...reviewUnlink,
       ...linearIssueLink,
       comment: getOptionalStringFlag(flags, 'comment'),
       workspaceStatus: getOptionalStringFlag(flags, 'workspace-status'),
@@ -262,6 +270,9 @@ export const WORKTREE_HANDLERS: Record<string, CommandHandler> = {
       parentWorktree: await getSetParentSelector(flags, cwd, client),
       noParent: flags.get('no-parent') === true
     })
+    if (reviewUnlink) {
+      assertReviewUnlinkApplied(reviewUnlink, result.result.worktree)
+    }
     printResult(result, json, formatWorktreeShow)
   },
   'worktree rm': async ({ flags, client, cwd, json }) => {
