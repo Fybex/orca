@@ -61,7 +61,7 @@ async function getFolderParentKeys(
 
 export async function listAttachedWorktrees(
   client: RuntimeClient,
-  folderWorkspace: FolderWorkspace
+  folderWorkspace: Pick<FolderWorkspace, 'id'>
 ): Promise<RuntimeWorktreeRecord[]> {
   const { worktrees } = (
     await client.call<RuntimeWorktreeListResult>('worktree.list', { limit: 10_000 })

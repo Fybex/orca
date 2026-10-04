@@ -97,7 +97,7 @@ export const CORE_COMMAND_SPECS: CommandSpec[] = [
       'Repeat --reference to attach full issue or review URLs before setup or agent startup. Cannot combine with legacy link flags.',
       'This creates a new checkout. For a fresh agent in an existing worktree, use `orca terminal create --worktree active --command "codex"` instead.',
       'By default, Orca records the new worktree as a child of the caller context when it can infer one from the Orca terminal or current directory.',
-      'If --repo is omitted, Orca infers the repo from the current Orca-managed worktree.',
+      "If --repo is omitted, Orca infers the repo from the current Orca-managed worktree. Under --parent-worktree folder:<id>, it uses the folder's repo when the folder links exactly one, and the current worktree's repo when it is one of several.",
       'Use --project with --host to create on a ready project host setup without spelling the backing repo id.',
       '--host runtime:<environment-id> creates on that paired Orca server; use the id from `orca environment list`, not the environment name.',
       'For related work, use the inferred parent or pass --parent-worktree active, folder:<id>, or worktree:<worktreeId> to make the relationship explicit. Worktree ids are the full <repo-id>::<path> values returned by `orca worktree list --json`.',

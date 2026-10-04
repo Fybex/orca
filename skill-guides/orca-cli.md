@@ -114,7 +114,7 @@ Lineage rules:
 - Use `--parent-worktree folder:<folderId>` or `--parent-worktree worktree:<repoId>::<worktreePath>` when a folder or worktree parent context should be explicit.
 - Use `--no-parent` only when the new work is independent.
 - `--no-parent` only controls Orca lineage; it does not choose the Git base. For independent top-level work, omit `--base-branch` so Orca uses the repo default base, or explicitly pass the repo default base. Never base it on the current feature branch unless the user asks for stacked work or "branch from current".
-- If `--repo` is omitted, Orca infers the repo from the current Orca worktree when possible.
+- If `--repo` is omitted, Orca infers the repo from the current Orca worktree when possible. Under `--parent-worktree folder:<id>` it uses the folder's repo when the folder links exactly one; with several, it fails and lists them unless the current worktree belongs to one.
 
 Agent/setup flags:
 

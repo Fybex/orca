@@ -20,8 +20,7 @@ import { printLineageSummary } from './worktree-lineage-summary'
 import { projectWorktreePsTerminalVerdict } from '../worktree-ps-terminal-verdict'
 import {
   assertWorkspaceTargetFlagsCompatible,
-  hasWorkspaceProjectTarget,
-  resolveProjectCreateRepoSelector
+  hasWorkspaceProjectTarget
 } from '../worktree-project-target'
 import {
   assertWorktreeParentFlagsCompatible,
@@ -32,6 +31,7 @@ import {
 import { getOptionalLinearIssueLinkFlag } from './worktree-linear-issue-link'
 import { getOptionalWorktreeUnreadFlag } from './worktree-unread-flag'
 import { applyAgentTerminalTitle, getCreateNameFlags } from './worktree-create-names'
+import { resolveCreateRepoSelector } from './worktree-create-repo-selector'
 import { getReviewTargetLinkFlags } from './worktree-review-link-flags'
 import { withSetupDecisionRecovery } from './worktree-setup-decision-recovery'
 import { assertGitLabLinkFlagProjectsMatch } from './worktree-gitlab-link-context'
@@ -88,41 +88,6 @@ function getOptionalSetupDecision(
     return setup
   }
   return setup
-}
-
-function getRepoSelectorFromWorktreeSelector(selector: string | undefined): string | undefined {
-  if (!selector?.startsWith('id:')) {
-    return undefined
-  }
-  const worktreeId = selector.slice('id:'.length)
-  const separatorIndex = worktreeId.indexOf('::')
-  if (separatorIndex <= 0) {
-    return undefined
-  }
-  return `id:${worktreeId.slice(0, separatorIndex)}`
-}
-
-async function getCreateRepoSelector(
-  flags: Map<string, string | boolean>,
-  cwdParentWorktree: string | undefined,
-  client: Parameters<CommandHandler>[0]['client']
-): Promise<string> {
-  const projectRepoSelector = await resolveProjectCreateRepoSelector(flags, client)
-  if (projectRepoSelector) {
-    return projectRepoSelector
-  }
-  const explicitRepo = getPresentStringFlag(flags, 'repo')
-  if (explicitRepo) {
-    return explicitRepo
-  }
-  const inferredRepo = getRepoSelectorFromWorktreeSelector(cwdParentWorktree)
-  if (inferredRepo) {
-    return inferredRepo
-  }
-  throw new RuntimeClientError(
-    'invalid_argument',
-    'Missing repo selector. Pass --repo or run from inside an Orca-managed worktree.'
-  )
 }
 
 export const WORKTREE_HANDLERS: Record<string, CommandHandler> = {
@@ -198,7 +163,13 @@ export const WORKTREE_HANDLERS: Record<string, CommandHandler> = {
     }
     const linearIssueLink = getOptionalLinearIssueLinkFlag(flags, 'linear-issue')
     const activate = flags.get('activate') === true || flags.get('run-hooks') === true
-    const repo = await getCreateRepoSelector(flags, cwdParentWorktree, client)
+    const repo = await resolveCreateRepoSelector({
+      flags,
+      client,
+      explicitRepo: getPresentStringFlag(flags, 'repo'),
+      cwdParentWorktree,
+      parentWorkspace: explicitParentWorkspace
+    })
     await assertGitLabLinkFlagProjectsMatch(flags, client, { repo })
     if (linkedItems) {
       await assertReferenceWritesSupported(client)
