@@ -9674,6 +9674,13 @@
               "description": "Show the bell button that opens the activity view at the top of the left sidebar.",
               "bell": "bell",
               "activity": "activity"
+            },
+            "attachedWorktreeReview": {
+              "title": "Review Attached Worktrees",
+              "description": "Show each worktree's changed files, lines and commits in the right sidebar's Attached worktrees tab, with Open and Review changes on right-click.",
+              "diff": "diff",
+              "review": "review",
+              "attached": "attached"
             }
           }
         },
@@ -17402,6 +17409,12 @@
           "actionsUnavailable": "Plugin actions are not available in this client.",
           "messageTooLarge": "Message exceeds the size limit.",
           "tooManyRequests": "Too many requests."
+        },
+        "AttachedWorktreeReviewRow": {
+          "open": "Open",
+          "reviewChanges": "Review changes",
+          "fileOne": "1 file",
+          "fileMany": "{{value0}} files"
         }
       },
       "link": {

@@ -7,6 +7,10 @@ import {
 import { useAppStore } from '@/store'
 import { translate } from '@/i18n/i18n'
 import type { Worktree } from '../../../../shared/worktree/types'
+import {
+  AttachedWorktreeDiffStatsLine,
+  AttachedWorktreeReviewMenu
+} from './AttachedWorktreeReviewRow'
 import { getAttachedWorktreesForFolderWorkspace } from './folder-workspace-attached-worktrees'
 import { useState } from 'react'
 
@@ -20,6 +24,7 @@ export default function FolderWorkspaceWorktreesPanel(): React.JSX.Element {
   const worktreeLineageById = useAppStore((s) => s.worktreeLineageById)
   const worktreesByRepo = useAppStore((s) => s.worktreesByRepo)
   const repos = useAppStore((s) => s.repos)
+  const attachedWorktreeReview = useAppStore((s) => s.settings?.attachedWorktreeReview) === true
   const [collapsedLineageWorktreeIds, setCollapsedLineageWorktreeIds] = useState<
     ReadonlySet<string>
   >(() => new Set())
@@ -61,11 +66,12 @@ export default function FolderWorkspaceWorktreesPanel(): React.JSX.Element {
       inheritedCardContentIndent: 0,
       lineageDepth: ancestorIds.size
     })
-    return (
+    const repo = repoById.get(worktree.repoId)
+    const card = (
       <WorktreeCard
         key={worktree.id}
         worktree={worktree}
-        repo={repoById.get(worktree.repoId)}
+        repo={repo}
         isActive={activeWorktreeId === worktree.id}
         isActiveSurface={false}
         hideRepoBadge={false}
@@ -73,6 +79,11 @@ export default function FolderWorkspaceWorktreesPanel(): React.JSX.Element {
         flushSurface
         contentIndent={lineageGeometry.cardContentIndent}
         affiliateListMode
+        affiliateFooter={
+          attachedWorktreeReview ? (
+            <AttachedWorktreeDiffStatsLine worktree={worktree} repo={repo} />
+          ) : undefined
+        }
         lineageChildCount={safeLineageChildren.length}
         lineageCollapsed={lineageCollapsed}
         lineageChildren={
@@ -109,6 +120,13 @@ export default function FolderWorkspaceWorktreesPanel(): React.JSX.Element {
             : undefined
         }
       />
+    )
+    return attachedWorktreeReview ? (
+      <AttachedWorktreeReviewMenu key={worktree.id} worktree={worktree} repo={repo}>
+        {card}
+      </AttachedWorktreeReviewMenu>
+    ) : (
+      card
     )
   }
 

@@ -16,6 +16,7 @@ export function WorktreeCardSurface({ card }: { card: WorktreeCardController }):
     selectedWorktrees,
     onAssignWorkspaceStatus,
     affiliateListMode,
+    affiliateFooter,
     isActiveSurface,
     activeSurfaceVariant,
     isMultiSelected,
@@ -109,6 +110,7 @@ export function WorktreeCardSurface({ card }: { card: WorktreeCardController }):
       ) : (
         parentCardContent
       )}
+      {affiliateListMode ? affiliateFooter : null}
 
       {newCardStyle && lineageChildren ? (
         <div

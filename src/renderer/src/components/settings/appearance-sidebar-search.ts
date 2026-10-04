@@ -188,6 +188,7 @@ export const getSidebarEntries = createLocalizedCatalog((): SettingsSearchEntry[
     ]
   },
   getShowActivityButtonEntry(),
+  getAttachedWorktreeReviewEntry(),
   getWorkspaceCardLayoutEntry(),
   getLeftSidebarAppearanceEntry(),
   getShowPinnedWorktreesInGroupsEntry(),
@@ -214,6 +215,32 @@ export const getShowActivityButtonEntry = createLocalizedCatalog((): SettingsSea
     ...translateSearchKeyword(
       'auto.components.settings.appearance.search.showActivityButton.activity',
       'activity'
+    )
+  ]
+}))
+
+export const getAttachedWorktreeReviewEntry = createLocalizedCatalog((): SettingsSearchEntry => ({
+  title: translate(
+    'auto.components.settings.appearance.search.attachedWorktreeReview.title',
+    'Review Attached Worktrees'
+  ),
+  description: translate(
+    'auto.components.settings.appearance.search.attachedWorktreeReview.description',
+    "Show each worktree's changed files, lines and commits in the right sidebar's Attached worktrees tab, with Open and Review changes on right-click."
+  ),
+  keywords: [
+    ...translateSearchKeyword('auto.components.settings.appearance.search.5bff6a2ef0', 'sidebar'),
+    ...translateSearchKeyword(
+      'auto.components.settings.appearance.search.attachedWorktreeReview.diff',
+      'diff'
+    ),
+    ...translateSearchKeyword(
+      'auto.components.settings.appearance.search.attachedWorktreeReview.review',
+      'review'
+    ),
+    ...translateSearchKeyword(
+      'auto.components.settings.appearance.search.attachedWorktreeReview.attached',
+      'attached'
     )
   ]
 }))

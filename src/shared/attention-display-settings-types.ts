@@ -14,4 +14,6 @@ export type AttentionDisplaySettings = {
   showActivityButton?: boolean
   /** Poll inactive managed Claude accounts with the active one and show each account's usage in the status bar. */
   showAllClaudeAccountsInStatusBar?: boolean
+  /** Show branch diff stats and a Review changes action on rows of the right sidebar's Attached worktrees tab. */
+  attachedWorktreeReview?: boolean
 }

@@ -17,6 +17,7 @@ type MockStoreState = {
   activeWorkspaceKey: string | null
   settings?: {
     experimentalNewWorktreeCardStyle?: boolean
+    attachedWorktreeReview?: boolean
   }
   folderWorkspaces: {
     id: string
@@ -41,6 +42,7 @@ type MockCardProps = {
   lineageChildren?: ReactNode
   lineageChildrenStyle?: CSSProperties
   onLineageToggle?: (event: MouseEvent<HTMLButtonElement>) => void
+  affiliateFooter?: ReactNode
 }
 
 const testState = vi.hoisted(() => {
@@ -67,6 +69,13 @@ vi.mock('@/store', () => ({
 vi.mock('@/i18n/i18n', () => ({
   translate: (_key: string, fallback: string, values?: Record<string, unknown>) =>
     values ? fallback.replace('{{value0}}', String(values.value0)) : fallback
+}))
+
+vi.mock('./AttachedWorktreeReviewRow', () => ({
+  AttachedWorktreeReviewMenu: ({ children }: { children: ReactNode }) => children,
+  AttachedWorktreeDiffStatsLine: ({ worktree }: { worktree: Worktree }) => (
+    <span data-testid="attached-worktree-diff-stats" data-worktree-id={worktree.id} />
+  )
 }))
 
 vi.mock('@/components/sidebar/WorktreeCard', () => ({
@@ -288,6 +297,18 @@ describe('FolderWorkspaceWorktreesPanel', () => {
     expect(testState.cardProps.every((props) => props.affiliateListMode === true)).toBe(true)
     expect(testState.cardProps.every((props) => props.nativeDragEnabled === false)).toBe(true)
     expect(testState.cardProps.every((props) => props.flushSurface === true)).toBe(true)
+    expect(testState.cardProps.every((props) => props.affiliateFooter === undefined)).toBe(true)
+  })
+
+  it('adds diff stats to every row only when attached worktree review is on', () => {
+    const { parent, child } = seedThreeLevelLineage()
+    testState.store.settings = { attachedWorktreeReview: true }
+
+    renderPanel()
+
+    expect(testState.cardProps.map((props) => props.worktree.id)).toContain(child.id)
+    expect(testState.cardProps.every((props) => props.affiliateFooter !== undefined)).toBe(true)
+    expect(testState.cardProps.some((props) => props.worktree.id === parent.id)).toBe(true)
   })
 
   it('renders nested worktree lineage under attached worktrees', () => {

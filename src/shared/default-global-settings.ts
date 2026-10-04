@@ -158,6 +158,7 @@ export function buildDefaultSettings(args: {
     showMobileButton: true,
     showActivityButton: true,
     showAllClaudeAccountsInStatusBar: false,
+    attachedWorktreeReview: false,
     showPinnedWorktreesInGroups: false,
     quietProjectGroups: true,
     ctrlTabOrderMode: 'mru',
