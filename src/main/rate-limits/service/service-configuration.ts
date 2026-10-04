@@ -76,6 +76,10 @@ export abstract class RateLimitServiceConfiguration extends RateLimitServiceAcco
     this.inactiveClaudeAccountsGeneration += 1
   }
 
+  setInactiveClaudePollingEnabledResolver(resolver: () => boolean): void {
+    this.inactiveClaudePollingEnabledResolver = resolver
+  }
+
   setInactiveCodexAccountsResolver(resolver: () => InactiveCodexAccountInfo[]): void {
     this.inactiveCodexAccountsResolver = resolver
     this.inactiveCodexAccountsGeneration += 1

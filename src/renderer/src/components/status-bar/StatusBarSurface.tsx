@@ -26,6 +26,7 @@ import { ClaudeSwitcherMenu } from './ClaudeSwitcherMenu'
 import { CodexSwitcherMenu } from './CodexSwitcherMenu'
 import { ProviderDetailsMenu } from './ProviderDetailsMenu'
 import { CLOSE_ALL_CONTEXT_MENUS_EVENT } from '@/lib/close-all-context-menus'
+import { ClaudeAccountUsageChips } from './ClaudeAccountUsageChips'
 import { ProviderSegment, UsageOverflowChip, getUsageTone } from './StatusBarProviderSegment'
 import {
   UsageUnitLabel,
@@ -156,22 +157,27 @@ export function StatusBarSurface({
                     ) : null}
                     {rosterProviders.map((p) => (
                       // Why: collapsed chips leave the row but stay measurable, so the density hook can bring them back.
-                      <span
-                        key={p.provider}
-                        data-usage-chip={p.provider}
-                        data-usage-urgent={getUsageTone(p) === 'urgent'}
-                        data-usage-percentage={usageChipShowsPercentage(p, usageMode)}
-                        data-usage-collapsed={collapsedUsageProviders.includes(p.provider)}
-                        aria-hidden={collapsedUsageProviders.includes(p.provider)}
-                        className="inline-flex data-[usage-collapsed=true]:invisible data-[usage-collapsed=true]:absolute"
-                      >
-                        <ProviderSegment
-                          p={p}
-                          compact={compact}
-                          display={usagePercentageDisplay}
-                          mode={usageMode}
-                        />
-                      </span>
+                      <React.Fragment key={p.provider}>
+                        <span
+                          data-usage-chip={p.provider}
+                          data-usage-urgent={getUsageTone(p) === 'urgent'}
+                          data-usage-percentage={usageChipShowsPercentage(p, usageMode)}
+                          data-usage-collapsed={collapsedUsageProviders.includes(p.provider)}
+                          aria-hidden={collapsedUsageProviders.includes(p.provider)}
+                          className="inline-flex data-[usage-collapsed=true]:invisible data-[usage-collapsed=true]:absolute"
+                        >
+                          <ProviderSegment
+                            p={p}
+                            compact={compact}
+                            display={usagePercentageDisplay}
+                            mode={usageMode}
+                          />
+                        </span>
+                        {p.provider === 'claude' &&
+                        !collapsedUsageProviders.includes(p.provider) ? (
+                          <ClaudeAccountUsageChips display={usagePercentageDisplay} />
+                        ) : null}
+                      </React.Fragment>
                     ))}
                     {collapseUsage ? (
                       <UsageOverflowChip

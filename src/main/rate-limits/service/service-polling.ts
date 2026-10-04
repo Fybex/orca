@@ -21,6 +21,8 @@ export abstract class RateLimitServicePolling extends RateLimitServiceFetchQueue
     }
   }
 
+  abstract fetchInactiveClaudeAccountsOnOpen(): Promise<void>
+
   // ---------------------------------------------------------------------------
   // Internal
   // ---------------------------------------------------------------------------
@@ -32,6 +34,9 @@ export abstract class RateLimitServicePolling extends RateLimitServiceFetchQueue
         return
       }
       void this.fetchAll()
+      if (this.inactiveClaudePollingEnabledResolver?.()) {
+        void this.fetchInactiveClaudeAccountsOnOpen()
+      }
     }, this.pollInterval)
   }
 

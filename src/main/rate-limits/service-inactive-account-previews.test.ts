@@ -4,8 +4,10 @@ import { RateLimitService } from './service'
 import { fetchClaudeRateLimits, fetchManagedAccountUsage } from './claude-fetcher'
 import { fetchCodexRateLimits } from './codex-fetcher'
 import {
+  asRateLimitWindow,
   deferred,
   errorProvider,
+  FakeRateLimitWindow,
   okProvider,
   resetRateLimitProviderMocks
 } from './rate-limit-service-test-harness'
@@ -205,6 +207,37 @@ describe('RateLimitService', () => {
 
       expect(fetchCodexRateLimits).toHaveBeenCalledTimes(2)
       expect(service.getState().inactiveCodexAccounts[0]?.rateLimits?.session?.usedPercent).toBe(67)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('polls inactive Claude accounts on the active timer only when the setting is on', async () => {
+    vi.useFakeTimers()
+    try {
+      vi.mocked(fetchClaudeRateLimits).mockResolvedValue(okProvider('claude', 12))
+      vi.mocked(fetchCodexRateLimits).mockResolvedValue(okProvider('codex', 24))
+      vi.mocked(fetchManagedAccountUsage).mockResolvedValue(okProvider('claude', 33))
+      const service = new RateLimitService()
+      let pollInactive = false
+      service.setInactiveClaudeAccountsResolver(() => [
+        { id: 'account-1', managedAuthPath: '/tmp/account-1/auth' }
+      ])
+      service.setInactiveClaudePollingEnabledResolver(() => pollInactive)
+      service.attach(asRateLimitWindow(new FakeRateLimitWindow()))
+      service.start({ fetchImmediately: false })
+
+      await vi.advanceTimersByTimeAsync(15 * 60 * 1000)
+      expect(fetchManagedAccountUsage).not.toHaveBeenCalled()
+
+      pollInactive = true
+      await vi.advanceTimersByTimeAsync(15 * 60 * 1000)
+      expect(fetchManagedAccountUsage).toHaveBeenCalledTimes(1)
+      expect(service.getState().inactiveClaudeAccounts).toEqual([
+        expect.objectContaining({ accountId: 'account-1', isFetching: false })
+      ])
+
+      service.stop()
     } finally {
       vi.useRealTimers()
     }

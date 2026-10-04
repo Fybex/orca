@@ -9382,6 +9382,10 @@
                 "codingPlan": "coding plan",
                 "rateLimit": "rate limit"
               }
+            },
+            "showAllClaudeAccounts": {
+              "title": "Show Every Claude Account in the Status Bar",
+              "description": "Also check the usage of inactive Claude accounts on the usage timer and show each account in the status bar."
             }
           }
         },

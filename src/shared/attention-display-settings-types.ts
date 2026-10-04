@@ -12,4 +12,6 @@ export type AttentionDisplaySettings = {
   agentReadOnTerminalFocus?: boolean
   /** Show the bell (activity view) button in the left sidebar header. */
   showActivityButton?: boolean
+  /** Poll inactive managed Claude accounts with the active one and show each account's usage in the status bar. */
+  showAllClaudeAccountsInStatusBar?: boolean
 }

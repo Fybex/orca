@@ -182,6 +182,9 @@ export function initializeMainProcessAccountServices(): void {
     store.getUI().statusBarItems.includes('antigravity')
   )
   state.rateLimits.setNetworkProxySettingsResolver(() => store.getSettings())
+  state.rateLimits.setInactiveClaudePollingEnabledResolver(
+    () => store.getSettings().showAllClaudeAccountsInStatusBar === true
+  )
   state.keybindings = new KeybindingService({
     homePath: app.getPath('home'),
     getLegacyOverrides: () => store.getSettings().keybindings,

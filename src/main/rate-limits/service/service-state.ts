@@ -109,6 +109,7 @@ export abstract class RateLimitServiceState {
   protected geminiCliOAuthEnabledResolver: GeminiCliOAuthEnabledResolver | null = null
   protected antigravityUsageEnabledResolver: AntigravityUsageEnabledResolver | null = null
   protected inactiveClaudeAccountsResolver: (() => InactiveClaudeAccountInfo[]) | null = null
+  protected inactiveClaudePollingEnabledResolver: (() => boolean) | null = null
   protected inactiveCodexAccountsResolver: (() => InactiveCodexAccountInfo[]) | null = null
   protected networkProxySettingsResolver: (() => NetworkProxySettings) | null = null
   protected inactiveClaudeCache = new Map<string, ProviderRateLimits>()
