@@ -226,7 +226,7 @@ export const getAttachedWorktreeReviewEntry = createLocalizedCatalog((): Setting
   ),
   description: translate(
     'auto.components.settings.appearance.search.attachedWorktreeReview.description',
-    "Show each worktree's changed files, lines and commits in the right sidebar's Attached worktrees tab, with Open and Review changes on right-click."
+    "Show each worktree's changed files, lines and commits in the right sidebar's Attached worktrees tab, with Open and Review changes on right-click. The tab also lists a worktree's stacked children."
   ),
   keywords: [
     ...translateSearchKeyword('auto.components.settings.appearance.search.5bff6a2ef0', 'sidebar'),

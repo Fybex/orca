@@ -10,7 +10,8 @@ const items: ActivityBarItem[] = [
     icon: Files,
     title: 'Workspaces',
     shortcut: '',
-    folderOnly: true
+    folderOnly: true,
+    lineageParentToo: true
   },
   {
     id: 'pr-checks',
@@ -77,5 +78,21 @@ describe('getVisibleRightSidebarActivityItems', () => {
         isSshRepo: true
       }).map((item) => item.id)
     ).toEqual(['explorer', 'ports', 'plugin:orca-samples.my-plugin/dashboard'])
+  })
+
+  it('shows Workspaces, but not PR Checks, for a git worktree with lineage children', () => {
+    expect(
+      getVisibleRightSidebarActivityItems(items, {
+        isFolder: false,
+        isFolderWorkspace: false,
+        isSshRepo: false,
+        isLineageParent: true
+      }).map((item) => item.id)
+    ).toEqual([
+      'explorer',
+      'workspaces',
+      'source-control',
+      'plugin:orca-samples.my-plugin/dashboard'
+    ])
   })
 })

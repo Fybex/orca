@@ -30,15 +30,21 @@ export default function FolderWorkspaceWorktreesPanel(): React.JSX.Element {
   >(() => new Set())
 
   const repoById = new Map(repos.map((repo) => [repo.id, repo]))
-  const { folderWorkspace, childWorktrees, lineageChildrenByParentId, rootChildWorktrees } =
-    getAttachedWorktreesForFolderWorkspace({
-      activeWorkspaceKey,
-      activeWorktreeId,
-      folderWorkspaces,
-      workspaceLineageByChildKey,
-      worktreeLineageById,
-      worktreesByRepo
-    })
+  const {
+    folderWorkspace,
+    parentWorktree,
+    childWorktrees,
+    lineageChildrenByParentId,
+    rootChildWorktrees
+  } = getAttachedWorktreesForFolderWorkspace({
+    activeWorkspaceKey,
+    activeWorktreeId,
+    folderWorkspaces,
+    workspaceLineageByChildKey,
+    worktreeLineageById,
+    worktreesByRepo,
+    includeWorktreeParent: attachedWorktreeReview
+  })
 
   const toggleLineage = (worktreeId: string): void => {
     setCollapsedLineageWorktreeIds((current) => {
@@ -130,7 +136,8 @@ export default function FolderWorkspaceWorktreesPanel(): React.JSX.Element {
     )
   }
 
-  if (!folderWorkspace) {
+  const scopeName = folderWorkspace?.name ?? parentWorktree?.displayName
+  if (scopeName === undefined) {
     return (
       <div className="flex min-h-0 flex-1 items-center justify-center p-6 text-center text-sm text-muted-foreground">
         {translate(
@@ -144,7 +151,7 @@ export default function FolderWorkspaceWorktreesPanel(): React.JSX.Element {
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-background">
       <div className="border-b border-border px-4 py-3">
-        <div className="truncate text-sm font-medium text-foreground">{folderWorkspace.name}</div>
+        <div className="truncate text-sm font-medium text-foreground">{scopeName}</div>
         <div className="mt-1 text-xs text-muted-foreground">
           {childWorktrees.length === 1
             ? translate(

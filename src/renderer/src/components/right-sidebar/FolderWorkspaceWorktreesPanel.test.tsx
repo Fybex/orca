@@ -300,6 +300,27 @@ describe('FolderWorkspaceWorktreesPanel', () => {
     expect(testState.cardProps.every((props) => props.affiliateFooter === undefined)).toBe(true)
   })
 
+  it('lists a git worktree parent lineage children when attached worktree review is on', () => {
+    const { parent, child, grandchild } = seedThreeLevelLineage()
+    testState.store.activeWorktreeId = parent.id
+    testState.store.activeWorkspaceKey = worktreeWorkspaceKey(parent.id)
+    testState.store.workspaceLineageByChildKey = {}
+
+    renderPanel()
+    expect(container.textContent).toContain('Workspaces are only shown for folder workspaces.')
+
+    testState.store.settings = { attachedWorktreeReview: true }
+    renderPanel()
+
+    expect(container.textContent).toContain('Parent card')
+    expect(container.textContent).toContain('1 attached worktree')
+    expect(
+      [...container.querySelectorAll('[data-testid="worktree-card"]')].map((node) =>
+        node.getAttribute('data-worktree-id')
+      )
+    ).toEqual([child.id, grandchild.id])
+  })
+
   it('adds diff stats to every row only when attached worktree review is on', () => {
     const { parent, child } = seedThreeLevelLineage()
     testState.store.settings = { attachedWorktreeReview: true }

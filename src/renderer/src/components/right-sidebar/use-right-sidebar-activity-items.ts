@@ -5,6 +5,7 @@ import { useRepoById } from '@/store/selectors'
 import { isFolderRepo } from '../../../../shared/repo-kind'
 import { parseWorkspaceKey } from '../../../../shared/workspace-scope'
 import { getVisibleRightSidebarActivityItems } from './right-sidebar-activity-visibility'
+import { getAttachedWorktreesForFolderWorkspace } from './folder-workspace-attached-worktrees'
 import { getPluginPanelActivityItems } from './plugin-panel-activity-items'
 import {
   collectInstalledPluginTabKeys,
@@ -45,6 +46,30 @@ export function useRightSidebarActivityItems({
   const isFolderWorkspace = activeWorkspaceScope?.type === 'folder'
   const isFolder = isFolderWorkspace || (activeRepo ? isFolderRepo(activeRepo) : false)
   const isSshRepo = Boolean(activeRepo?.connectionId)
+  const attachedWorktreeReview = useAppStore((s) => s.settings?.attachedWorktreeReview === true)
+  const worktreeLineageById = useAppStore((s) => s.worktreeLineageById)
+  const worktreesByRepo = useAppStore((s) => s.worktreesByRepo)
+  const isLineageParent = useMemo(
+    () =>
+      attachedWorktreeReview &&
+      activeWorkspaceScope?.type === 'worktree' &&
+      getAttachedWorktreesForFolderWorkspace({
+        activeWorkspaceKey: activeWorktreeId,
+        activeWorktreeId,
+        folderWorkspaces: [],
+        workspaceLineageByChildKey: {},
+        worktreeLineageById,
+        worktreesByRepo,
+        includeWorktreeParent: true
+      }).parentWorktree !== null,
+    [
+      activeWorkspaceScope?.type,
+      activeWorktreeId,
+      attachedWorktreeReview,
+      worktreeLineageById,
+      worktreesByRepo
+    ]
+  )
   const pluginSystemEnabled = useAppStore((s) => s.settings?.pluginSystemEnabled === true)
   const pluginPanels = usePluginPanels()
   const visiblePluginPanels = useMemo(
@@ -81,7 +106,8 @@ export function useRightSidebarActivityItems({
           'Attached worktrees'
         ),
         shortcut: '',
-        folderOnly: true
+        folderOnly: true,
+        lineageParentToo: true
       },
       {
         id: 'pr-checks',
@@ -130,9 +156,10 @@ export function useRightSidebarActivityItems({
       getVisibleRightSidebarActivityItems(activityItems, {
         isFolder,
         isFolderWorkspace,
-        isSshRepo
+        isSshRepo,
+        isLineageParent
       }),
-    [activityItems, isFolder, isFolderWorkspace, isSshRepo]
+    [activityItems, isFolder, isFolderWorkspace, isSshRepo, isLineageParent]
   )
 
   const activeFolderWorkspaceKey = isFolderWorkspace ? (activeWorktreeId ?? null) : null

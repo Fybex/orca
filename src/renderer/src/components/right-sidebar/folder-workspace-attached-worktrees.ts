@@ -7,6 +7,8 @@ import { getProjectedWorktreeLineageChildrenByParentId } from '../sidebar/worktr
 
 export type AttachedWorktreeResolution = {
   folderWorkspace: FolderWorkspace | null
+  /** Set when the active scope is a git worktree listed with its lineage children. */
+  parentWorktree: Worktree | null
   childWorktrees: Worktree[]
   lineageChildrenByParentId: Map<string, Worktree[]>
   rootChildWorktrees: Worktree[]
@@ -19,6 +21,7 @@ type AttachedWorktreeResolverArgs = {
   workspaceLineageByChildKey: Record<string, WorkspaceLineage>
   worktreeLineageById: Record<string, WorktreeLineage>
   worktreesByRepo: Record<string, readonly Worktree[]>
+  includeWorktreeParent?: boolean
 }
 
 export function getWorktreeActivityTime(worktree: Worktree): number {
@@ -31,9 +34,17 @@ export function getAttachedWorktreesForFolderWorkspace({
   folderWorkspaces,
   workspaceLineageByChildKey,
   worktreeLineageById,
-  worktreesByRepo
+  worktreesByRepo,
+  includeWorktreeParent = false
 }: AttachedWorktreeResolverArgs): AttachedWorktreeResolution {
   const activeScope = parseWorkspaceKey(activeWorkspaceKey ?? activeWorktreeId ?? '')
+  if (includeWorktreeParent && activeScope?.type === 'worktree') {
+    return getAttachedWorktreesForWorktreeParent(
+      activeScope.worktreeId,
+      worktreeLineageById,
+      getWorktreeById(worktreesByRepo)
+    )
+  }
   const folderWorkspace =
     activeScope?.type === 'folder'
       ? (folderWorkspaces.find((workspace) => workspace.id === activeScope.folderWorkspaceId) ??
@@ -41,12 +52,7 @@ export function getAttachedWorktreesForFolderWorkspace({
       : null
 
   if (!folderWorkspace) {
-    return {
-      folderWorkspace: null,
-      childWorktrees: [],
-      lineageChildrenByParentId: new Map(),
-      rootChildWorktrees: []
-    }
+    return EMPTY_RESOLUTION
   }
 
   const folderKey = folderWorkspaceKey(folderWorkspace.id)
@@ -77,9 +83,42 @@ export function getAttachedWorktreesForFolderWorkspace({
 
   return {
     folderWorkspace,
+    parentWorktree: null,
     childWorktrees,
     lineageChildrenByParentId,
     rootChildWorktrees
+  }
+}
+
+const EMPTY_RESOLUTION: AttachedWorktreeResolution = {
+  folderWorkspace: null,
+  parentWorktree: null,
+  childWorktrees: [],
+  lineageChildrenByParentId: new Map(),
+  rootChildWorktrees: []
+}
+
+function getAttachedWorktreesForWorktreeParent(
+  parentId: string,
+  worktreeLineageById: Record<string, WorktreeLineage>,
+  worktreeById: Map<string, Worktree>
+): AttachedWorktreeResolution {
+  const parentWorktree = worktreeById.get(parentId)
+  const lineageChildrenByParentId = getLineageChildrenByParentId(
+    worktreeLineageById,
+    worktreeById,
+    new Set([parentId])
+  )
+  const childWorktrees = lineageChildrenByParentId.get(parentId) ?? []
+  if (!parentWorktree || childWorktrees.length === 0) {
+    return EMPTY_RESOLUTION
+  }
+  return {
+    folderWorkspace: null,
+    parentWorktree,
+    childWorktrees,
+    lineageChildrenByParentId,
+    rootChildWorktrees: childWorktrees
   }
 }
 

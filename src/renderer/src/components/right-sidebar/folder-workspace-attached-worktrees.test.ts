@@ -271,3 +271,77 @@ describe('getAttachedWorktreesForFolderWorkspace', () => {
     expect(result.rootChildWorktrees.map((worktree) => worktree.id)).toEqual([parent.id])
   })
 })
+
+describe('getAttachedWorktreesForFolderWorkspace for a git worktree parent', () => {
+  function seedStack(): { parent: Worktree; child: Worktree; grandchild: Worktree } {
+    return {
+      parent: makeWorktree({ id: 'repo-1::/parent', instanceId: 'parent' }),
+      child: makeWorktree({ id: 'repo-1::/child', instanceId: 'child' }),
+      grandchild: makeWorktree({ id: 'repo-1::/grandchild', instanceId: 'grandchild' })
+    }
+  }
+
+  it('lists the active worktree lineage children under it', () => {
+    const { parent, child, grandchild } = seedStack()
+
+    const result = getAttachedWorktreesForFolderWorkspace({
+      activeWorkspaceKey: worktreeWorkspaceKey(parent.id),
+      activeWorktreeId: parent.id,
+      folderWorkspaces: [makeFolder()],
+      workspaceLineageByChildKey: {},
+      worktreeLineageById: {
+        [child.id]: makeWorktreeLineage(child, parent),
+        [grandchild.id]: makeWorktreeLineage(grandchild, child)
+      },
+      worktreesByRepo: { 'repo-1': [parent, child, grandchild] },
+      includeWorktreeParent: true
+    })
+
+    expect(result.folderWorkspace).toBeNull()
+    expect(result.parentWorktree?.id).toBe(parent.id)
+    expect(result.rootChildWorktrees.map((worktree) => worktree.id)).toEqual([child.id])
+    expect(result.lineageChildrenByParentId.get(child.id)?.map((worktree) => worktree.id)).toEqual([
+      grandchild.id
+    ])
+  })
+
+  it('resolves nothing for a worktree without children or when not asked', () => {
+    const { parent, child } = seedStack()
+    const args = {
+      activeWorkspaceKey: worktreeWorkspaceKey(parent.id),
+      activeWorktreeId: parent.id,
+      folderWorkspaces: [makeFolder()],
+      workspaceLineageByChildKey: {},
+      worktreeLineageById: { [child.id]: makeWorktreeLineage(child, parent) },
+      worktreesByRepo: { 'repo-1': [parent, child] }
+    }
+
+    expect(getAttachedWorktreesForFolderWorkspace(args).parentWorktree).toBeNull()
+    expect(
+      getAttachedWorktreesForFolderWorkspace({
+        ...args,
+        activeWorkspaceKey: worktreeWorkspaceKey(child.id),
+        activeWorktreeId: child.id,
+        includeWorktreeParent: true
+      }).parentWorktree
+    ).toBeNull()
+  })
+
+  it('skips archived children', () => {
+    const { parent, child } = seedStack()
+    const archived = { ...child, isArchived: true }
+
+    const result = getAttachedWorktreesForFolderWorkspace({
+      activeWorkspaceKey: worktreeWorkspaceKey(parent.id),
+      activeWorktreeId: parent.id,
+      folderWorkspaces: [],
+      workspaceLineageByChildKey: {},
+      worktreeLineageById: { [child.id]: makeWorktreeLineage(archived, parent) },
+      worktreesByRepo: { 'repo-1': [parent, archived] },
+      includeWorktreeParent: true
+    })
+
+    expect(result.parentWorktree).toBeNull()
+    expect(result.childWorktrees).toEqual([])
+  })
+})
