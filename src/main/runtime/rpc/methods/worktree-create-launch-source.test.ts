@@ -39,4 +39,42 @@ describe('worktree.create launch source', () => {
       )
     }
   })
+
+  it('starts the agent of a worktree created under a folder workspace', async () => {
+    // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: the fixture implements every runtime method worktree.create reaches for a create with no provenance request.
+    const runtime = {
+      getRuntimeId: () => 'test-runtime',
+      dedupeWorktreeCreate: <T>(_repo: string, _id: string | undefined, run: () => Promise<T>) =>
+        run(),
+      showRepo: vi.fn().mockResolvedValue(repo),
+      createManagedWorktree: vi.fn().mockResolvedValue({
+        worktree: { id: 'wt-1' },
+        startupTerminal: { handle: 'term-1' }
+      })
+    } as unknown as OrcaRuntimeService
+    const dispatcher = new RpcDispatcher({ runtime, methods: WORKTREE_METHODS })
+
+    const response = await dispatcher.dispatch({
+      id: 'req-1',
+      authToken: 'tok',
+      method: 'worktree.create',
+      params: {
+        repo: 'repo-1',
+        name: 'child',
+        parentWorkspace: 'folder:folder-1',
+        startupAgent: 'claude',
+        startupPrompt: 'Fix the flaky test',
+        launchSource: 'cli'
+      }
+    })
+
+    expect(response).toMatchObject({ ok: true, result: { agentTerminalHandle: 'term-1' } })
+    expect(runtime.createManagedWorktree).toHaveBeenCalledWith(
+      expect.objectContaining({
+        startupAgent: 'claude',
+        startupPrompt: 'Fix the flaky test',
+        lineage: expect.objectContaining({ parentWorkspace: 'folder:folder-1' })
+      })
+    )
+  })
 })

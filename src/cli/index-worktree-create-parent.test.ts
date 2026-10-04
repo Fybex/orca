@@ -239,6 +239,68 @@ describe('orca cli worktree awareness', () => {
     }
   })
 
+  it('creates a child of a folder workspace and starts its agent in one call', async () => {
+    queueFixtures(
+      callMock,
+      okFixture('req_create', {
+        worktree: buildWorktree('/tmp/repo/child', 'child', 'abc', 'repo-1'),
+        lineage: null,
+        workspaceLineage: {
+          childWorkspaceKey: 'worktree:repo-1::/tmp/repo/child',
+          childInstanceId: 'child-instance',
+          parentWorkspaceKey: 'folder:folder-1',
+          parentInstanceId: null,
+          origin: 'cli',
+          capture: { source: 'explicit-cli-flag', confidence: 'explicit' },
+          createdAt: 1
+        },
+        agentTerminalHandle: 'term-child',
+        warnings: []
+      })
+    )
+    vi.spyOn(console, 'log').mockImplementation(() => {})
+
+    await main(
+      [
+        'worktree',
+        'create',
+        '--repo',
+        'id:repo-1',
+        '--name',
+        'child',
+        '--parent-worktree',
+        'folder:folder-1',
+        '--agent',
+        'claude',
+        '--prompt',
+        'Fix the flaky test',
+        '--json'
+      ],
+      '/tmp/features/feature-1'
+    )
+
+    expect(callMock).toHaveBeenCalledTimes(1)
+    expect(callMock).toHaveBeenCalledWith('worktree.create', {
+      repo: 'id:repo-1',
+      name: 'child',
+      displayName: 'child',
+      displayNameKind: 'user',
+      baseBranch: undefined,
+      linkedIssue: undefined,
+      comment: undefined,
+      runHooks: false,
+      activate: false,
+      parentWorktree: undefined,
+      parentWorkspace: 'folder:folder-1',
+      noParent: false,
+      callerTerminalHandle: undefined,
+      cliProvenanceRequest: {},
+      startupAgent: 'claude',
+      startupPrompt: 'Fix the flaky test',
+      launchSource: 'cli'
+    })
+  })
+
   it('passes folder workspace environment lineage through worktree.create', async () => {
     process.env.ORCA_WORKSPACE_ID = 'folder:folder-1'
     queueFixtures(
