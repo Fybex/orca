@@ -4,7 +4,7 @@ import type { Worktree } from '../../../../shared/worktree/types'
 import type { HostedReviewInfo } from '../../../../shared/hosted-review'
 import { hostedReviewInfoFromGitHubPRInfo } from '../../../../shared/hosted-review-github'
 import { isFolderRepo } from '../../../../shared/repo-kind'
-import { isGitHubPRSuppressed } from '../../../../shared/worktree/github-pr-suppression'
+import { isHostedReviewSuppressed } from '../../../../shared/worktree/github-pr-suppression'
 import { getWorktreeCardPrDisplay } from '@/components/sidebar/worktree-card-pr-display'
 import { getWorktreeGitIdentityDisplay } from '@/lib/worktree-git-identity-display'
 import { getGitHubRepoCacheKey } from '@/store/slices/github-cache-key'
@@ -113,7 +113,10 @@ function buildParentPrChecksRow(
     args.worktree.linkedBitbucketPR ?? null,
     args.worktree.linkedAzureDevOpsPR ?? null,
     args.worktree.linkedGiteaPR ?? null,
-    { suppressedGitHubPR: args.worktree.suppressedGitHubPR ?? null }
+    {
+      suppressedGitHubPR: args.worktree.suppressedGitHubPR ?? null,
+      suppressedGitLabMR: args.worktree.suppressedGitLabMR ?? null
+    }
   )
   const review = reviewSnapshot.review
   const status = classifyParentPrChecksRowStatus({
@@ -156,11 +159,7 @@ function getReviewSnapshot(
   branch: string | null,
   outcome: ParentPrChecksRefreshOutcome | undefined
 ): { review: HostedReviewInfo | null | undefined; hasCacheEntry: boolean } {
-  if (
-    outcome?.kind === 'found' &&
-    (outcome.review.provider !== 'github' ||
-      !isGitHubPRSuppressed(args.worktree, outcome.review.number))
-  ) {
+  if (outcome?.kind === 'found' && !isHostedReviewSuppressed(args.worktree, outcome.review)) {
     return { review: outcome.review, hasCacheEntry: true }
   }
   if (!args.repo || !branch) {

@@ -176,7 +176,7 @@ export function useWorktreeCardSecondaryDetails({
   const hoverReviewProvider = hoverReview?.provider
   const canUnlinkReview =
     hoverReviewProvider === 'github' ||
-    (hoverReviewProvider === 'gitlab' && linkedGitLabMR !== null) ||
+    hoverReviewProvider === 'gitlab' ||
     (hoverReviewProvider === 'bitbucket' && linkedBitbucketPR !== null) ||
     (hoverReviewProvider === 'azure-devops' && linkedAzureDevOpsPR !== null) ||
     (hoverReviewProvider === 'gitea' && linkedGiteaPR !== null)
@@ -202,7 +202,16 @@ export function useWorktreeCardSecondaryDetails({
         }
         return
       case 'gitlab':
-        void updateWorktreeMeta(worktree.id, { linkedGitLabMR: null }, options)
+        if (hoverReview) {
+          const result = await updateWorktreeMeta(
+            worktree.id,
+            { linkedGitLabMR: null, suppressedGitLabMR: hoverReview.number },
+            options
+          )
+          if (!result.ok) {
+            toast.error(result.error)
+          }
+        }
         return
       case 'bitbucket':
         void updateWorktreeMeta(worktree.id, { linkedBitbucketPR: null }, options)

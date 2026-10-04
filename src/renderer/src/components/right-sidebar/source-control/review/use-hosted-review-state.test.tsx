@@ -22,12 +22,16 @@ function renderState({
   pr = makePR(),
   hostedReviewEntryData = null,
   linkedPR = null,
-  suppressedGitHubPR = null
+  suppressedGitHubPR = null,
+  linkedGitLabMR = null,
+  suppressedGitLabMR = null
 }: {
   pr?: PRInfo | null
   hostedReviewEntryData?: HostedReviewInfo | null
   linkedPR?: number | null
   suppressedGitHubPR?: number | null
+  linkedGitLabMR?: number | null
+  suppressedGitLabMR?: number | null
 } = {}) {
   return renderHook(() =>
     useSourceControlHostedReviewState({
@@ -38,7 +42,9 @@ function renderState({
       hostedReviewCacheKey: 'cache-key',
       hostedReviewEntryData,
       linkedPR,
-      suppressedGitHubPR
+      suppressedGitHubPR,
+      linkedGitLabMR,
+      suppressedGitLabMR
     })
   ).result.current
 }
@@ -62,23 +68,46 @@ describe('useSourceControlHostedReviewState', () => {
     expect(renderState({ linkedPR: 42, suppressedGitHubPR: 42 }).hostedReview?.number).toBe(42)
   })
 
-  it('preserves non-GitHub reviews', () => {
-    const gitLabReview: HostedReviewInfo = {
-      provider: 'gitlab',
-      number: 42,
-      title: 'GitLab review',
-      state: 'open',
-      url: 'https://gitlab.com/acme/orca/-/merge_requests/42',
-      status: 'pending',
-      updatedAt: '2026-08-27T00:00:00Z',
-      mergeable: 'UNKNOWN'
-    }
+  const gitLabReview: HostedReviewInfo = {
+    provider: 'gitlab',
+    number: 42,
+    title: 'GitLab review',
+    state: 'open',
+    url: 'https://gitlab.com/acme/orca/-/merge_requests/42',
+    status: 'pending',
+    updatedAt: '2026-08-27T00:00:00Z',
+    mergeable: 'UNKNOWN'
+  }
 
+  it('preserves non-GitHub reviews', () => {
     expect(
       renderState({
         pr: null,
         hostedReviewEntryData: gitLabReview,
         suppressedGitHubPR: 42
+      }).hostedReview
+    ).toBe(gitLabReview)
+  })
+
+  it('hides a matching suppressed GitLab MR and blocks duplicate creation', () => {
+    const state = renderState({
+      pr: null,
+      hostedReviewEntryData: gitLabReview,
+      suppressedGitLabMR: 42
+    })
+
+    expect(state.hostedReview).toBeNull()
+    expect(state.hostedReviewCreation).toMatchObject({
+      provider: 'gitlab',
+      canCreate: false,
+      review: { number: 42 }
+    })
+    expect(
+      renderState({
+        pr: null,
+        hostedReviewEntryData: gitLabReview,
+        linkedGitLabMR: 42,
+        suppressedGitLabMR: 42
       }).hostedReview
     ).toBe(gitLabReview)
   })

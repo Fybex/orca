@@ -7,7 +7,7 @@ import type { HostedReviewProvider } from '../../../../shared/hosted-review'
 import type { Repo } from '../../../../shared/repo-types'
 import type { TerminalTab } from '../../../../shared/terminal-tab-types'
 import type { Worktree } from '../../../../shared/worktree/types'
-import { isGitHubPRSuppressed } from '../../../../shared/worktree/github-pr-suppression'
+import { isHostedReviewSuppressed } from '../../../../shared/worktree/github-pr-suppression'
 import type { WorkspaceSpaceWorktree } from '../../../../shared/workspace-space-types'
 import { branchDisplayName } from '../sidebar/WorktreeCardHelpers'
 import { findRepoForHost } from '../../store/slices/repo-host-identity'
@@ -141,9 +141,9 @@ export function getWorkspaceDecisionDetails(
   )
   const cachedHostedReview = inputs.hostedReviewCache[reviewCacheKey]?.data
   const hostedReview =
-    cachedHostedReview?.provider === 'github' &&
+    cachedHostedReview &&
     workspaceRecord &&
-    isGitHubPRSuppressed(workspaceRecord, cachedHostedReview.number)
+    isHostedReviewSuppressed(workspaceRecord, cachedHostedReview)
       ? null
       : cachedHostedReview
   const linkedPR = workspaceRecord?.linkedPR ?? null

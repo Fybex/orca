@@ -6,7 +6,7 @@ import { isWorkspaceLinkedItemSourceContextMatch } from '../../../shared/workspa
 import { DEFAULT_WORKSPACE_STATUS_ID } from '../../../shared/workspace-statuses'
 import type { WorktreeMeta } from '../../../shared/worktree/meta-types'
 import { WORKTREE_META_PERSISTED_DEFAULTS } from '../../../shared/worktree/meta-persisted-defaults'
-import { normalizeGitHubPRSuppressionUpdate } from '../../../shared/worktree/github-pr-suppression'
+import { normalizeReviewSuppressionUpdate } from '../../../shared/worktree/github-pr-suppression'
 import type { WorkspaceAttachmentMutation } from '../../../shared/workspace-attachment-mutation'
 import { normalizeWorkspaceAttachmentUpdate } from '../../../shared/workspace-attachments'
 
@@ -39,7 +39,7 @@ export function mergeWorktreeMetaForWrite(
   const normalizedUpdates = normalizeWorkspaceAttachmentUpdate(existing, updates)
   const updated = {
     ...(existing ?? createDefaultWorktreeMeta()),
-    ...normalizeGitHubPRSuppressionUpdate(normalizedUpdates),
+    ...normalizeReviewSuppressionUpdate(normalizedUpdates),
     ...identity
   }
   updated.linkedWorkItem = normalizeWorkspaceLinkedItem(updated.linkedWorkItem)

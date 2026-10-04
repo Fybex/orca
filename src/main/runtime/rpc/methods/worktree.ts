@@ -157,6 +157,7 @@ export const WORKTREE_METHODS = [
     permission: 'workspace',
     params: WorktreeSet,
     handler: async (params, { runtime }) => ({
+      // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: diffComments and mobileDiffReview are the renderer's own serialized review state, stored as sent.
       worktree: await runtime.updateManagedWorktreeMeta(params.worktree, {
         displayName: params.displayName,
         ...(params.displayName !== undefined
@@ -165,6 +166,7 @@ export const WORKTREE_METHODS = [
         linkedIssue: params.linkedIssue,
         linkedPR: params.linkedPR,
         suppressedGitHubPR: params.suppressedGitHubPR,
+        suppressedGitLabMR: params.suppressedGitLabMR,
         linkedLinearIssue: params.linkedLinearIssue,
         linkedLinearIssueWorkspaceId: params.linkedLinearIssueWorkspaceId,
         linkedLinearIssueOrganizationUrlKey: params.linkedLinearIssueOrganizationUrlKey,

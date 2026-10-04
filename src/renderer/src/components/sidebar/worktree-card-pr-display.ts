@@ -1,7 +1,7 @@
 import type { HostedReviewInfo } from '../../../../shared/hosted-review'
 import type { PRInfo } from '../../../../shared/github/pull-request-types'
 import type { Worktree } from '../../../../shared/worktree/types'
-import { isGitHubPRSuppressed } from '../../../../shared/worktree/github-pr-suppression'
+import { isHostedReviewSuppressed } from '../../../../shared/worktree/github-pr-suppression'
 
 type LinkedReviewMetadataProvider = Exclude<HostedReviewInfo['provider'], 'unsupported'>
 
@@ -45,6 +45,7 @@ type WorktreeCardPrDisplayOptions = {
   /** GitHub PR number proven by a branch-scoped lookup. */
   branchLookupGitHubPRNumber?: number | null
   suppressedGitHubPR?: number | null
+  suppressedGitLabMR?: number | null
 }
 
 function getLinkedReviewNumber(
@@ -103,10 +104,15 @@ export function getWorktreeCardPrDisplay(
     linkedAzureDevOpsPR !== null ||
     linkedGiteaPR !== null
   if (
-    review?.provider === 'github' &&
-    isGitHubPRSuppressed(
-      { linkedPR, suppressedGitHubPR: options.suppressedGitHubPR ?? null },
-      review.number
+    review &&
+    isHostedReviewSuppressed(
+      {
+        linkedPR,
+        suppressedGitHubPR: options.suppressedGitHubPR ?? null,
+        linkedGitLabMR,
+        suppressedGitLabMR: options.suppressedGitLabMR ?? null
+      },
+      review
     )
   ) {
     return null

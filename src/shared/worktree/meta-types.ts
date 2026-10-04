@@ -36,6 +36,8 @@ export type WorktreeMeta = {
   linkedPR: number | null
   /** GitHub PR hidden from branch discovery after an explicit unlink. */
   suppressedGitHubPR?: number | null
+  /** GitLab MR hidden from branch discovery after an explicit unlink. */
+  suppressedGitLabMR?: number | null
   linkedLinearIssue: string | null
   linkedLinearIssueWorkspaceId?: string | null
   linkedLinearIssueOrganizationUrlKey?: string | null

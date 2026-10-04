@@ -66,6 +66,7 @@ export function buildWorktreeChecksReviewIndex({
       linkedPR: worktree.linkedPR ?? null,
       suppressedGitHubPR: worktree.suppressedGitHubPR ?? null,
       linkedGitLabMR: worktree.linkedGitLabMR ?? null,
+      suppressedGitLabMR: worktree.suppressedGitLabMR ?? null,
       linkedBitbucketPR: worktree.linkedBitbucketPR ?? null,
       linkedAzureDevOpsPR: worktree.linkedAzureDevOpsPR ?? null,
       linkedGiteaPR: worktree.linkedGiteaPR ?? null

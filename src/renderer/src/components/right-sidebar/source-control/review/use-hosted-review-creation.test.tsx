@@ -364,7 +364,9 @@ describe('useSourceControlHostedReviewCreation', () => {
         hostedReviewCacheKey: null,
         hostedReviewEntryData: null,
         linkedPR: null,
-        suppressedGitHubPR: null
+        suppressedGitHubPR: null,
+        linkedGitLabMR: null,
+        suppressedGitLabMR: null
       })
       useSourceControlHostedReviewEligibility({
         activeRepoConnectionId: null,

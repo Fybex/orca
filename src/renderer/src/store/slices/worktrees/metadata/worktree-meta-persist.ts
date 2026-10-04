@@ -11,6 +11,7 @@ import {
 import {
   TASK_SOURCE_CONTEXT_RUNTIME_CAPABILITY,
   WORKTREE_GITHUB_PR_SUPPRESSION_RUNTIME_CAPABILITY,
+  WORKTREE_GITLAB_MR_SUPPRESSION_RUNTIME_CAPABILITY,
   WORKTREE_LINKED_WORK_ITEM_CONTEXT_RUNTIME_CAPABILITY
 } from '../../../../../../shared/protocol-version'
 import { toRuntimeWorktreeSelector } from '../../../../runtime/runtime-worktree-selector'
@@ -19,6 +20,24 @@ import type { AppState } from '../../../types'
 import type { WorktreeMeta } from '../../../../../../shared/worktree/meta-types'
 import type { ExecutionHostId } from '../../../../../../shared/execution-host'
 import { encodePushTargetClearForRuntimeRpc } from './hosted-review-link-mutation'
+
+function reviewSuppressionCapabilityGates() {
+  return [
+    {
+      field: 'suppressedGitHubPR',
+      capability: WORKTREE_GITHUB_PR_SUPPRESSION_RUNTIME_CAPABILITY,
+      message: translate(
+        'auto.store.slices.worktrees.metadata.worktree.meta.persist.github.pr.suppression',
+        'Update the remote runtime to unlink GitHub pull requests'
+      )
+    },
+    {
+      field: 'suppressedGitLabMR',
+      // Why: no message, so an older host is not refused; it still clears the explicit MR link.
+      capability: WORKTREE_GITLAB_MR_SUPPRESSION_RUNTIME_CAPABILITY
+    }
+  ] as const
+}
 
 type PendingDisplayNameWrite = {
   worktreeId: string
@@ -138,25 +157,19 @@ async function persistWorktreeMetaUntracked(
   ) {
     compatibleUpdates = legacySelection
   }
-  if (target.kind === 'environment' && 'suppressedGitHubPR' in updates) {
-    if (typeof updates.suppressedGitHubPR === 'number' && updates.suppressedGitHubPR > 0) {
-      await assertRuntimeEnvironmentCapability(
-        target.environmentId,
-        WORKTREE_GITHUB_PR_SUPPRESSION_RUNTIME_CAPABILITY,
-        translate(
-          'auto.store.slices.worktrees.metadata.worktree.meta.persist.github.pr.suppression',
-          'Update the remote runtime to unlink GitHub pull requests'
-        )
-      )
+  for (const gate of reviewSuppressionCapabilityGates()) {
+    if (target.kind !== 'environment' || !(gate.field in updates)) {
+      continue
+    }
+    const value = updates[gate.field]
+    if ('message' in gate && typeof value === 'number' && value > 0) {
+      await assertRuntimeEnvironmentCapability(target.environmentId, gate.capability, gate.message)
     } else if (
-      updates.suppressedGitHubPR === null &&
-      !(await runtimeEnvironmentSupportsCapability(
-        target.environmentId,
-        WORKTREE_GITHUB_PR_SUPPRESSION_RUNTIME_CAPABILITY
-      ))
+      (value === null || !('message' in gate)) &&
+      !(await runtimeEnvironmentSupportsCapability(target.environmentId, gate.capability))
     ) {
       const olderHostUpdates = { ...compatibleUpdates }
-      delete olderHostUpdates.suppressedGitHubPR
+      delete olderHostUpdates[gate.field]
       compatibleUpdates = olderHostUpdates
     }
   }

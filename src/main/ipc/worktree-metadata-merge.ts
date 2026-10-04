@@ -70,6 +70,9 @@ export function mergeWorktree(
     ...(meta?.suppressedGitHubPR !== undefined
       ? { suppressedGitHubPR: meta.suppressedGitHubPR }
       : {}),
+    ...(meta?.suppressedGitLabMR !== undefined
+      ? { suppressedGitLabMR: meta.suppressedGitLabMR }
+      : {}),
     linkedLinearIssue: meta?.linkedLinearIssue ?? null,
     linkedLinearIssueWorkspaceId: meta?.linkedLinearIssueWorkspaceId ?? null,
     linkedLinearIssueOrganizationUrlKey: meta?.linkedLinearIssueOrganizationUrlKey ?? null,

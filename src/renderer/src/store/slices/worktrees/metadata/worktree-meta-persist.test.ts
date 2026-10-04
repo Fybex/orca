@@ -175,6 +175,37 @@ describe('persistWorktreeMeta GitHub PR suppression compatibility', () => {
     )
   })
 
+  it('drops GitLab suppression for older hosts without refusing the unlink', async () => {
+    mocks.supportsCapability.mockResolvedValue(false)
+
+    await persistWorktreeMeta({} as never, 'repo::/feature', {
+      linkedGitLabMR: null,
+      suppressedGitLabMR: 7
+    })
+
+    expect(mocks.assertCapability).not.toHaveBeenCalled()
+    expect(mocks.callRuntimeRpc).toHaveBeenCalledWith(
+      mocks.target,
+      'worktree.set',
+      { worktree: 'id:repo::/feature', linkedGitLabMR: null },
+      { timeoutMs: 15_000 }
+    )
+  })
+
+  it('sends GitLab suppression to capable hosts', async () => {
+    await persistWorktreeMeta({} as never, 'repo::/feature', {
+      linkedGitLabMR: null,
+      suppressedGitLabMR: 7
+    })
+
+    expect(mocks.callRuntimeRpc).toHaveBeenCalledWith(
+      mocks.target,
+      'worktree.set',
+      { worktree: 'id:repo::/feature', linkedGitLabMR: null, suppressedGitLabMR: 7 },
+      { timeoutMs: 15_000 }
+    )
+  })
+
   it('preserves host-owned suppression writes without a paired-runtime capability check', async () => {
     const updateMeta = vi.fn().mockResolvedValue(undefined)
     mocks.target = { kind: 'local' }

@@ -1,7 +1,10 @@
 import type { PRInfo } from '../../../../shared/github/pull-request-types'
 import type { HostedReviewInfo } from '../../../../shared/hosted-review'
 import { hostedReviewInfoFromGitHubPRInfo } from '../../../../shared/hosted-review-github'
-import { isGitHubPRSuppressed } from '../../../../shared/worktree/github-pr-suppression'
+import {
+  isGitHubPRSuppressed,
+  isGitLabMRSuppressed
+} from '../../../../shared/worktree/github-pr-suppression'
 
 export type ChecksPanelReview = HostedReviewInfo
 
@@ -11,6 +14,7 @@ export type ChecksPanelReviewSelectionInput = {
   linkedPR: number | null
   suppressedGitHubPR: number | null
   linkedGitLabMR: number | null
+  suppressedGitLabMR: number | null
   linkedBitbucketPR: number | null
   linkedAzureDevOpsPR: number | null
   linkedGiteaPR: number | null
@@ -28,13 +32,16 @@ export function selectChecksPanelReview({
   linkedPR,
   suppressedGitHubPR,
   linkedGitLabMR,
+  suppressedGitLabMR,
   linkedBitbucketPR,
   linkedAzureDevOpsPR,
   linkedGiteaPR
 }: ChecksPanelReviewSelectionInput): ChecksPanelReview | null {
   const gitLabHostedReview = hostedReview?.provider === 'gitlab' ? hostedReview : null
   if (gitLabHostedReview) {
-    return gitLabHostedReview
+    return isGitLabMRSuppressed({ linkedGitLabMR, suppressedGitLabMR }, gitLabHostedReview.number)
+      ? null
+      : gitLabHostedReview
   }
   const hasNonGitHubLinkedReview =
     linkedGitLabMR !== null ||

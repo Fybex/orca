@@ -46,7 +46,9 @@ export function useSourceControlReviewContext(panelState: SourceControlPanelStat
     hostedReviewCacheKey,
     hostedReviewEntryData,
     linkedPR: activeWorktree?.linkedPR ?? null,
-    suppressedGitHubPR: activeWorktree?.suppressedGitHubPR ?? null
+    suppressedGitHubPR: activeWorktree?.suppressedGitHubPR ?? null,
+    linkedGitLabMR: activeWorktree?.linkedGitLabMR ?? null,
+    suppressedGitLabMR: activeWorktree?.suppressedGitLabMR ?? null
   })
   const {
     hasSuppressedGitHubPR,

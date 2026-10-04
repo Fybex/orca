@@ -1,7 +1,10 @@
 import { useMemo, useRef, useState } from 'react'
 import { localizedHostedReviewCopy } from '@/i18n/hosted-review-localized-copy'
 import type { HostedReviewInfo } from '../../../../../../shared/hosted-review'
-import { isGitHubPRSuppressed } from '../../../../../../shared/worktree/github-pr-suppression'
+import {
+  isGitHubPRSuppressed,
+  isHostedReviewSuppressed
+} from '../../../../../../shared/worktree/github-pr-suppression'
 import { resolveHostedReviewCreationProvider } from '../../../../../../shared/hosted-review-creation-providers'
 import type { SourceControlWorktreeContext } from '../listing/use-worktree-context'
 import type {
@@ -22,7 +25,9 @@ export function useSourceControlHostedReviewState({
   hostedReviewCacheKey,
   hostedReviewEntryData,
   linkedPR,
-  suppressedGitHubPR
+  suppressedGitHubPR,
+  linkedGitLabMR,
+  suppressedGitLabMR
 }: {
   activePrFromQueue: SourceControlWorktreeContext['activePrFromQueue']
   activeRepoId: string | null
@@ -32,6 +37,8 @@ export function useSourceControlHostedReviewState({
   hostedReviewEntryData: SourceControlWorktreeContext['hostedReviewEntryData']
   linkedPR: number | null
   suppressedGitHubPR: number | null
+  linkedGitLabMR: number | null
+  suppressedGitLabMR: number | null
 }) {
   const [hostedReviewCreationState, setHostedReviewCreationState] =
     useState<HostedReviewCreationState | null>(null)
@@ -63,11 +70,18 @@ export function useSourceControlHostedReviewState({
   const hasSuppressedGitHubPR =
     rawHostedReview?.provider === 'github' &&
     isGitHubPRSuppressed({ linkedPR, suppressedGitHubPR }, rawHostedReview.number)
-  const hostedReview = hasSuppressedGitHubPR ? null : rawHostedReview
+  const hasSuppressedReview =
+    rawHostedReview !== null &&
+    isHostedReviewSuppressed(
+      { linkedPR, suppressedGitHubPR, linkedGitLabMR, suppressedGitLabMR },
+      rawHostedReview
+    )
+  const hostedReview = hasSuppressedReview ? null : rawHostedReview
   const hostedReviewCreation =
-    hasSuppressedGitHubPR && rawHostedReview
+    hasSuppressedReview && rawHostedReview
       ? {
-          provider: 'github' as const,
+          provider:
+            rawHostedReview.provider === 'gitlab' ? ('gitlab' as const) : ('github' as const),
           review: { number: rawHostedReview.number, url: rawHostedReview.url },
           canCreate: false,
           blockedReason: 'existing_review' as const,

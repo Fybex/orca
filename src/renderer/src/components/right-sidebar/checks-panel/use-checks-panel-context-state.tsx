@@ -215,6 +215,7 @@ export function useChecksPanelContextState(model: ChecksPanelContextStateInput) 
   const suppressedGitHubPR = activeWorktree?.suppressedGitHubPR ?? null
   const fallbackGitHubPRNumber = linkedPR == null ? (pr?.number ?? null) : null
   const linkedGitLabMR = activeWorktree?.linkedGitLabMR ?? null
+  const suppressedGitLabMR = activeWorktree?.suppressedGitLabMR ?? null
   const linkedBitbucketPR = activeWorktree?.linkedBitbucketPR ?? null
   const linkedAzureDevOpsPR = activeWorktree?.linkedAzureDevOpsPR ?? null
   const linkedGiteaPR = activeWorktree?.linkedGiteaPR ?? null
@@ -224,6 +225,7 @@ export function useChecksPanelContextState(model: ChecksPanelContextStateInput) 
     linkedPR,
     suppressedGitHubPR,
     linkedGitLabMR,
+    suppressedGitLabMR,
     linkedBitbucketPR,
     linkedAzureDevOpsPR,
     linkedGiteaPR

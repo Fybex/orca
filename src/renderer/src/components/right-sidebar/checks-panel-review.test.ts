@@ -72,6 +72,7 @@ describe('selectChecksPanelReview', () => {
         linkedPR: null,
         suppressedGitHubPR: null,
         linkedGitLabMR: 34,
+        suppressedGitLabMR: null,
         linkedBitbucketPR: null,
         linkedAzureDevOpsPR: null,
         linkedGiteaPR: null
@@ -86,6 +87,7 @@ describe('selectChecksPanelReview', () => {
       linkedPR: null,
       suppressedGitHubPR: null,
       linkedGitLabMR: null,
+      suppressedGitLabMR: null,
       linkedBitbucketPR: null,
       linkedAzureDevOpsPR: null,
       linkedGiteaPR: null
@@ -107,6 +109,7 @@ describe('selectChecksPanelReview', () => {
         linkedPR: null,
         suppressedGitHubPR: null,
         linkedGitLabMR: links.linkedGitLabMR ?? null,
+        suppressedGitLabMR: null,
         linkedBitbucketPR: links.linkedBitbucketPR ?? null,
         linkedAzureDevOpsPR: links.linkedAzureDevOpsPR ?? null,
         linkedGiteaPR: links.linkedGiteaPR ?? null
@@ -122,6 +125,7 @@ describe('selectChecksPanelReview', () => {
         linkedPR: null,
         suppressedGitHubPR: 12,
         linkedGitLabMR: null,
+        suppressedGitLabMR: null,
         linkedBitbucketPR: null,
         linkedAzureDevOpsPR: null,
         linkedGiteaPR: null
@@ -137,6 +141,7 @@ describe('selectChecksPanelReview', () => {
         linkedPR: 42,
         suppressedGitHubPR: null,
         linkedGitLabMR: null,
+        suppressedGitLabMR: null,
         linkedBitbucketPR: null,
         linkedAzureDevOpsPR: null,
         linkedGiteaPR: null
@@ -148,6 +153,7 @@ describe('selectChecksPanelReview', () => {
     const common = {
       hostedReview: null,
       linkedGitLabMR: null,
+      suppressedGitLabMR: null,
       linkedBitbucketPR: null,
       linkedAzureDevOpsPR: null,
       linkedGiteaPR: null

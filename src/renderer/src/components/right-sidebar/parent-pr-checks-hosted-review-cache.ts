@@ -1,7 +1,7 @@
 import type { HostedReviewInfo } from '../../../../shared/hosted-review'
 import type { PRInfo } from '../../../../shared/github/pull-request-types'
 import type { Worktree } from '../../../../shared/worktree/types'
-import { isGitHubPRSuppressed } from '../../../../shared/worktree/github-pr-suppression'
+import { isHostedReviewSuppressed } from '../../../../shared/worktree/github-pr-suppression'
 import {
   getWorktreeCardPrDisplay,
   isCachedMergedBranchPRCurrentForWorktree
@@ -13,7 +13,7 @@ export function canUseParentPrChecksHostedReviewCacheEntry(
   review: HostedReviewInfo,
   entry: ParentPrChecksCacheEntry<HostedReviewInfo>
 ): boolean {
-  if (review.provider === 'github' && isGitHubPRSuppressed(worktree, review.number)) {
+  if (isHostedReviewSuppressed(worktree, review)) {
     return false
   }
   if (review.state === 'merged' && !mergedReviewMatchesHead(review, worktree)) {
@@ -35,7 +35,8 @@ export function canUseParentPrChecksHostedReviewCacheEntry(
     worktree.linkedGiteaPR ?? null,
     {
       reviewHintKey: entry.linkedReviewHintKey,
-      suppressedGitHubPR: worktree.suppressedGitHubPR ?? null
+      suppressedGitHubPR: worktree.suppressedGitHubPR ?? null,
+      suppressedGitLabMR: worktree.suppressedGitLabMR ?? null
     }
   )
   return display?.provider === review.provider && display.number === review.number

@@ -7,7 +7,7 @@ import {
   getWorkspaceAttachments,
   normalizeWorkspaceAttachmentUpdate
 } from '../../../../../../shared/workspace-attachments'
-import { normalizeGitHubPRSuppressionUpdate } from '../../../../../../shared/worktree/github-pr-suppression'
+import { normalizeReviewSuppressionUpdate } from '../../../../../../shared/worktree/github-pr-suppression'
 import type { WorktreeSlice } from '../../worktree-helpers'
 import type { WorktreeSliceGet, WorktreeSliceSet } from '../listing/worktree-slice-types'
 import { translate } from '@/i18n/i18n'
@@ -117,7 +117,7 @@ export function createUpdateWorktreeMeta(
     if (shouldApplyUpdate && !shouldApplyUpdate(worktreeForUpdate)) {
       return { ok: true }
     }
-    normalizedUpdates = normalizeGitHubPRSuppressionUpdate(
+    normalizedUpdates = normalizeReviewSuppressionUpdate(
       normalizeWorkspaceAttachmentUpdate(worktreeForUpdate, mutationUpdates)
     )
     const currentResolvedPushTarget =

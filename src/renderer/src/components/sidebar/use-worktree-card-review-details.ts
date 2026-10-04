@@ -188,7 +188,8 @@ export function useWorktreeCardReviewDetails({
           ? ''
           : hostedReviewEntry?.linkedReviewHintKey,
       branchLookupGitHubPRNumber,
-      suppressedGitHubPR: worktree.suppressedGitHubPR ?? null
+      suppressedGitHubPR: worktree.suppressedGitHubPR ?? null,
+      suppressedGitLabMR: worktree.suppressedGitLabMR ?? null
     }
   )
 

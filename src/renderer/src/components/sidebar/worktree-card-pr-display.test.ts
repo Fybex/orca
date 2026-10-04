@@ -166,6 +166,27 @@ describe('getWorktreeCardPrDisplay', () => {
     })
   })
 
+  it('hides only the suppressed branch-discovered GitLab MR', () => {
+    const options = { reviewHintKey: '' }
+    expect(
+      getWorktreeCardPrDisplay(gitLabReview, null, null, null, null, null, {
+        ...options,
+        suppressedGitLabMR: 321
+      })
+    ).toBeNull()
+    expect(
+      getWorktreeCardPrDisplay(gitLabReview, null, null, null, null, null, {
+        ...options,
+        suppressedGitLabMR: 999
+      })
+    ).toBe(gitLabReview)
+    expect(
+      getWorktreeCardPrDisplay(gitLabReview, null, 321, null, null, null, {
+        suppressedGitLabMR: 321
+      })
+    ).toBe(gitLabReview)
+  })
+
   it('preserves branch-discovered hosted reviews for providers without worktree metadata', () => {
     expect(
       getWorktreeCardPrDisplay(bitbucketReview, null, null, null, null, null, {
