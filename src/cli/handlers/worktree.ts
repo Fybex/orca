@@ -13,11 +13,7 @@ import {
   type WithAnnotatedHostScope
 } from '../omitted-host-scope-selectors'
 import { RuntimeClientError } from '../runtime-client'
-import {
-  getOptionalPositiveIntegerFlag,
-  getOptionalStringFlag,
-  getRequiredStringFlag
-} from '../flags'
+import { getOptionalPositiveIntegerFlag, getOptionalStringFlag } from '../flags'
 import { getRequiredWorktreeSelector, resolveCurrentWorktreeSelector } from '../selectors'
 import { isTuiAgent } from '../../shared/tui-agent-config'
 import { printLineageSummary } from './worktree-lineage-summary'
@@ -35,6 +31,7 @@ import {
 } from './worktree-create-parent-selector'
 import { getOptionalLinearIssueLinkFlag } from './worktree-linear-issue-link'
 import { getOptionalWorktreeUnreadFlag } from './worktree-unread-flag'
+import { applyAgentTerminalTitle, getCreateNameFlags } from './worktree-create-names'
 import { getReviewTargetLinkFlags } from './worktree-review-link-flags'
 import { withSetupDecisionRecovery } from './worktree-setup-decision-recovery'
 import { assertGitLabLinkFlagProjectsMatch } from './worktree-gitlab-link-context'
@@ -167,6 +164,7 @@ export const WORKTREE_HANDLERS: Record<string, CommandHandler> = {
     const linkedItems = getCreateReferences(flags)
     assertWorktreeParentFlagsCompatible(flags)
     assertWorkspaceTargetFlagsCompatible(flags)
+    const { name, displayName, agentTitle } = getCreateNameFlags(flags)
     const reviewLinks = getReviewTargetLinkFlags(flags)
     const callerTerminalHandle =
       typeof process.env.ORCA_TERMINAL_HANDLE === 'string' &&
@@ -200,7 +198,6 @@ export const WORKTREE_HANDLERS: Record<string, CommandHandler> = {
     }
     const linearIssueLink = getOptionalLinearIssueLinkFlag(flags, 'linear-issue')
     const activate = flags.get('activate') === true || flags.get('run-hooks') === true
-    const name = getRequiredStringFlag(flags, 'name')
     const repo = await getCreateRepoSelector(flags, cwdParentWorktree, client)
     await assertGitLabLinkFlagProjectsMatch(flags, client, { repo })
     if (linkedItems) {
@@ -210,7 +207,7 @@ export const WORKTREE_HANDLERS: Record<string, CommandHandler> = {
       client.call<RuntimeWorktreeCreateResult>('worktree.create', {
         repo,
         name,
-        displayName: name,
+        displayName,
         displayNameKind: 'user',
         baseBranch: getOptionalStringFlag(flags, 'base-branch'),
         ...reviewLinks,
@@ -240,6 +237,7 @@ export const WORKTREE_HANDLERS: Record<string, CommandHandler> = {
           : {})
       })
     )
+    await applyAgentTerminalTitle(client, result.result, agentTitle)
     printHookWarning(result.result, json)
     printLineageSummary(result.result, json)
     printResult(result, json, formatWorktreeShow)

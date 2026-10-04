@@ -3,6 +3,7 @@ export const FLAG_HELP_TEXT: Record<string, string> = {
   'external-worktree-visibility':
     '--external-worktree-visibility show|hide|inherit  Override or inherit non-Orca worktree visibility',
   agent: '--agent <id>          Launch a known TUI agent in the first terminal',
+  'agent-title': '--agent-title <text>  Tab title for the terminal started by --agent',
   'base-branch': '--base-branch <ref>    Base branch/ref to create the worktree from',
   command: '--command <text>       Command to run in the terminal on startup',
   comment: '--comment <text>       Comment stored in Orca metadata',
