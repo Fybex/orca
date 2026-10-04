@@ -26,7 +26,7 @@ import { ClaudeSwitcherMenu } from './ClaudeSwitcherMenu'
 import { CodexSwitcherMenu } from './CodexSwitcherMenu'
 import { ProviderDetailsMenu } from './ProviderDetailsMenu'
 import { CLOSE_ALL_CONTEXT_MENUS_EVENT } from '@/lib/close-all-context-menus'
-import { ClaudeAccountUsageChips } from './ClaudeAccountUsageChips'
+import { ActiveClaudeAccountLabel, ClaudeAccountUsageChips } from './ClaudeAccountUsageChips'
 import { ProviderSegment, UsageOverflowChip, getUsageTone } from './StatusBarProviderSegment'
 import {
   UsageUnitLabel,
@@ -164,8 +164,9 @@ export function StatusBarSurface({
                           data-usage-percentage={usageChipShowsPercentage(p, usageMode)}
                           data-usage-collapsed={collapsedUsageProviders.includes(p.provider)}
                           aria-hidden={collapsedUsageProviders.includes(p.provider)}
-                          className="inline-flex data-[usage-collapsed=true]:invisible data-[usage-collapsed=true]:absolute"
+                          className="inline-flex items-center gap-1.5 data-[usage-collapsed=true]:invisible data-[usage-collapsed=true]:absolute"
                         >
+                          {p.provider === 'claude' ? <ActiveClaudeAccountLabel /> : null}
                           <ProviderSegment
                             p={p}
                             compact={compact}

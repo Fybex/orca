@@ -21,6 +21,7 @@ type StoreState = {
   settings: {
     showAllClaudeAccountsInStatusBar: boolean
     activeRuntimeEnvironmentId: string | null
+    activeClaudeManagedAccountId: string | null
     claudeManagedAccounts: { id: string; email: string }[]
   }
   rateLimits: { inactiveClaudeAccounts: InactiveAccountUsage[] }
@@ -31,7 +32,9 @@ const storeState: StoreState = {
   settings: {
     showAllClaudeAccountsInStatusBar: true,
     activeRuntimeEnvironmentId: null,
+    activeClaudeManagedAccountId: 'acct-main',
     claudeManagedAccounts: [
+      { id: 'acct-main', email: 'main.person@example.com' },
       { id: 'acct-work', email: 'work.person@example.com' },
       { id: 'acct-side', email: 'side@example.com' }
     ]
@@ -68,6 +71,7 @@ describe('ClaudeAccountUsageChips', () => {
   beforeEach(() => {
     storeState.settings.showAllClaudeAccountsInStatusBar = true
     storeState.settings.activeRuntimeEnvironmentId = null
+    storeState.settings.activeClaudeManagedAccountId = 'acct-main'
     storeState.rateLimits.inactiveClaudeAccounts = [
       inactiveUsage('acct-work', 12, 40),
       inactiveUsage('acct-side', 70, 85)
@@ -94,5 +98,17 @@ describe('ClaudeAccountUsageChips', () => {
     storeState.settings.showAllClaudeAccountsInStatusBar = true
     storeState.settings.activeRuntimeEnvironmentId = 'remote-1'
     expect(renderToStaticMarkup(<ClaudeAccountUsageChips display="used" />)).toBe('')
+  })
+
+  it('labels the active account chip by account when the setting is on', async () => {
+    const { ActiveClaudeAccountLabel } = await import('./ClaudeAccountUsageChips')
+    expect(renderToStaticMarkup(<ActiveClaudeAccountLabel />)).toContain('>main.person<')
+
+    storeState.settings.showAllClaudeAccountsInStatusBar = false
+    expect(renderToStaticMarkup(<ActiveClaudeAccountLabel />)).toBe('')
+
+    storeState.settings.showAllClaudeAccountsInStatusBar = true
+    storeState.settings.activeClaudeManagedAccountId = null
+    expect(renderToStaticMarkup(<ActiveClaudeAccountLabel />)).toBe('')
   })
 })
