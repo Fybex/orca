@@ -1,11 +1,8 @@
 import { claudeProfileHistoryDirs } from '../claude-accounts/claude-profile-installed-router'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
-import { readdir } from 'node:fs/promises'
+import { readdir, realpath } from 'node:fs/promises'
 import { isDefinitiveAbsence } from '../../shared/definitive-filesystem-absence'
-
-const CLAUDE_PROJECTS_DIR = join(homedir(), '.claude', 'projects')
-const CLAUDE_TRANSCRIPTS_DIR = join(homedir(), '.claude', 'transcripts')
 
 async function walkJsonlFiles(dirPath: string): Promise<string[]> {
   const entries = await readdir(dirPath, { withFileTypes: true }).catch((error: unknown) => {
@@ -43,10 +40,49 @@ export function claudeProfileTranscriptDirs(): string[] {
   return [...claudeProfileHistoryDirs('projects'), ...claudeProfileHistoryDirs('transcripts')]
 }
 
+// Why: per-account Claude config dirs (`~/.claude-work`, CLAUDE_CONFIG_DIR) keep their own
+// transcripts; turns copied between them are deduped by the scanner's message-id ownership.
+async function listClaudeConfigDirs(): Promise<string[]> {
+  const home = homedir()
+  const dirs = [join(home, '.claude')]
+  const configured = process.env.CLAUDE_CONFIG_DIR?.trim()
+  if (configured) {
+    dirs.push(configured)
+  }
+  try {
+    for (const entry of await readdir(home, { withFileTypes: true })) {
+      if (entry.name.startsWith('.claude-') && (entry.isDirectory() || entry.isSymbolicLink())) {
+        dirs.push(join(home, entry.name))
+      }
+    }
+  } catch {
+    // An unreadable home still leaves the default config dir.
+  }
+  return dirs
+}
+
+async function listTranscriptRoots(profileDirs: readonly string[]): Promise<string[]> {
+  const roots: string[] = []
+  const seenRealPaths = new Set<string>()
+  const configRoots = (await listClaudeConfigDirs()).flatMap((dir) => [
+    join(dir, 'projects'),
+    join(dir, 'transcripts')
+  ])
+  for (const root of [...configRoots, ...profileDirs]) {
+    // Why: a symlinked config dir would otherwise walk the same tree twice.
+    const realRoot = await realpath(root).catch(() => root)
+    if (!seenRealPaths.has(realRoot)) {
+      seenRealPaths.add(realRoot)
+      roots.push(root)
+    }
+  }
+  return roots
+}
+
 export async function listClaudeTranscriptFiles(
   profileDirs = claudeProfileTranscriptDirs()
 ): Promise<string[]> {
-  const roots = [CLAUDE_PROJECTS_DIR, CLAUDE_TRANSCRIPTS_DIR, ...profileDirs]
+  const roots = await listTranscriptRoots(profileDirs)
   const files = await Promise.all(roots.map((root) => walkJsonlFiles(root)))
   return [...new Set(files.flat())].sort()
 }

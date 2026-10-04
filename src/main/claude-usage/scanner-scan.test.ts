@@ -1,4 +1,4 @@
-import { mkdtemp, mkdir, rm, writeFile } from 'node:fs/promises'
+import { mkdtemp, mkdir, rm, symlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
@@ -16,6 +16,7 @@ async function makeClaudeProjectsRoot(): Promise<string> {
 }
 
 afterEach(async () => {
+  vi.unstubAllEnvs()
   vi.doUnmock('os')
   vi.doUnmock('fs/promises')
   vi.resetModules()
@@ -201,6 +202,51 @@ describe('scanClaudeUsageFiles', () => {
     expect(result.dailyAggregates.reduce((sum, row) => sum + row.inputTokens, 0)).toBe(150)
     expect(result.processedFiles[0]?.ownedDedupeKeys).toEqual(['msg:msg_1'])
     expect(result.processedFiles[1]?.ownedDedupeKeys).toEqual(['msg:msg_2'])
+  })
+
+  it('scans sibling and CLAUDE_CONFIG_DIR config dirs and counts a copied turn once', async () => {
+    const root = await makeClaudeProjectsRoot()
+    const configDir = join(root, 'custom-claude-config')
+    const defaultFile = join(root, '.claude', 'projects', 'project-a', 'session-1.jsonl')
+    const siblingFile = join(root, '.claude-work', 'projects', 'project-a', 'session-1.jsonl')
+    const configFile = join(configDir, 'projects', 'project-b', 'session-3.jsonl')
+    await mkdir(join(root, '.claude-work', 'projects', 'project-a'), { recursive: true })
+    await mkdir(join(configDir, 'projects', 'project-b'), { recursive: true })
+    await symlink(join(root, '.claude'), join(root, '.claude-alias'))
+
+    const turn = (sessionId: string, messageId: string, inputTokens: number): string =>
+      JSON.stringify({
+        type: 'assistant',
+        sessionId,
+        timestamp: '2026-04-09T10:00:00.000Z',
+        cwd: '/workspace/repo-a',
+        message: {
+          id: messageId,
+          model: 'claude-sonnet-4-6',
+          usage: { input_tokens: inputTokens, output_tokens: 10 }
+        }
+      })
+
+    await writeFile(defaultFile, turn('session-1', 'msg_1', 100))
+    await writeFile(
+      siblingFile,
+      [turn('session-1', 'msg_1', 100), turn('session-1', 'msg_2', 40)].join('\n')
+    )
+    await writeFile(configFile, turn('session-3', 'msg_3', 7))
+
+    vi.stubEnv('CLAUDE_CONFIG_DIR', configDir)
+    vi.resetModules()
+    vi.doMock('os', async () => ({
+      ...(await vi.importActual<typeof Os>('os')),
+      homedir: () => root
+    }))
+    const { scanClaudeUsageFiles } = await import('./scanner')
+
+    const result = await scanClaudeUsageFiles([])
+    expect(result.processedFiles.map((file) => file.path).sort()).toEqual(
+      [configFile, defaultFile, siblingFile].sort()
+    )
+    expect(result.dailyAggregates.reduce((sum, row) => sum + row.inputTokens, 0)).toBe(147)
   })
 
   it('dedupes fork copies via uuid when message ids are absent', async () => {
