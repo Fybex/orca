@@ -187,11 +187,36 @@ export const getSidebarEntries = createLocalizedCatalog((): SettingsSearchEntry[
       ...translateSearchKeyword('auto.components.settings.appearance.search.839fb1e3ed', 'toolbox')
     ]
   },
+  getShowActivityButtonEntry(),
   getWorkspaceCardLayoutEntry(),
   getLeftSidebarAppearanceEntry(),
   getShowPinnedWorktreesInGroupsEntry(),
   getQuietProjectGroupsEntry()
 ])
+
+export const getShowActivityButtonEntry = createLocalizedCatalog((): SettingsSearchEntry => ({
+  title: translate(
+    'auto.components.settings.appearance.search.showActivityButton.title',
+    'Show Activity Button'
+  ),
+  description: translate(
+    'auto.components.settings.appearance.search.showActivityButton.description',
+    'Show the bell button that opens the activity view at the top of the left sidebar.'
+  ),
+  keywords: [
+    ...translateSearchKeyword('auto.components.settings.appearance.search.5bff6a2ef0', 'sidebar'),
+    ...translateSearchKeyword('auto.components.settings.appearance.search.6cf5f54ce1', 'button'),
+    ...translateSearchKeyword('auto.components.settings.appearance.search.648eeada79', 'hide'),
+    ...translateSearchKeyword(
+      'auto.components.settings.appearance.search.showActivityButton.bell',
+      'bell'
+    ),
+    ...translateSearchKeyword(
+      'auto.components.settings.appearance.search.showActivityButton.activity',
+      'activity'
+    )
+  ]
+}))
 
 export const getQuietProjectGroupsEntry = createLocalizedCatalog((): SettingsSearchEntry => ({
   title: translate(

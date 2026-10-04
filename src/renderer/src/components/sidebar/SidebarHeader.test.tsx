@@ -32,6 +32,7 @@ type MockState = {
     experimentalAgentDashboardPopout?: boolean
     agentsSidebarIntroShown?: boolean
     agentsSidebarMigratedFromExperimental?: boolean
+    showActivityButton?: boolean
   }
 }
 
@@ -250,6 +251,20 @@ describe('SidebarHeader', () => {
     })
 
     expect(mockState.setSidebarBody).toHaveBeenCalledWith('workspaces')
+  })
+
+  it('hides the bell when its setting is off, but keeps it as the exit from the activity view', () => {
+    mockState.settings = { showActivityButton: false }
+    act(() => {
+      root.render(<SidebarHeader onWorkspaceBoardMenuOpenChange={vi.fn()} />)
+    })
+    expect(container.querySelector('[aria-label="View activity"]')).toBeNull()
+
+    mockState.sidebarBody = 'agents'
+    act(() => {
+      root.render(<SidebarHeader onWorkspaceBoardMenuOpenChange={vi.fn()} />)
+    })
+    expect(headerButton('Turn off activity view')).toBeTruthy()
   })
 
   it('uses the legacy title based on workspace grouping', () => {

@@ -156,6 +156,7 @@ export function buildDefaultSettings(args: {
     showArtifactsButton: false,
     showSkillsButton: false,
     showMobileButton: true,
+    showActivityButton: true,
     showPinnedWorktreesInGroups: false,
     quietProjectGroups: true,
     ctrlTabOrderMode: 'mru',

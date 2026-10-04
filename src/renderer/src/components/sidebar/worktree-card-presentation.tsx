@@ -85,7 +85,13 @@ export function buildWorktreeCardPresentation(card: WorktreeCardController) {
   const showRepoBadgeInMetaRow =
     !showRepoIdentityInTitle && !!repo && !hideRepoBadge && !showPinnedRepoIcon
   const showHostContextBadge = !compactCards && !!hostContextLabel && cardProps.includes('host')
-  const showDetachedHeadInMetaRow = !compactCards && !isFolder && detachedHeadDisplay !== null
+  const showDetachedHeadInMetaRow =
+    !compactCards &&
+    !isFolder &&
+    detachedHeadDisplay !== null &&
+    cardProps.includes('detached-head')
+  const showPrimaryBadge =
+    !compactCards && worktree.isMainWorktree && !isFolder && cardProps.includes('primary')
   const showBranch =
     !isFolder &&
     branch.length > 0 &&
@@ -248,6 +254,7 @@ export function buildWorktreeCardPresentation(card: WorktreeCardController) {
     showHostContextBadge,
     showIdentityInNewCard,
     showDetachedHeadInMetaRow,
+    showPrimaryBadge,
     showBranch,
     showConflictOperationBadge,
     showUnreadQuickAction,

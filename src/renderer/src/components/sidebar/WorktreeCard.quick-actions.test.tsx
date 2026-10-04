@@ -335,7 +335,7 @@ describe('WorktreeCard quick actions', () => {
   })
 
   it('renders detached HEAD identity in detailed card metadata', () => {
-    worktreeCardProperties = []
+    worktreeCardProperties = ['detached-head']
 
     const markup = renderToStaticMarkup(
       <WorktreeCard
@@ -351,6 +351,30 @@ describe('WorktreeCard quick actions', () => {
     expect(markup).toContain('Detached HEAD @ abc123')
     expect(markup).toContain('Detached HEAD at abc123. You are viewing a commit, not a branch.')
     expect(markup).toContain('tabindex="0"')
+  })
+
+  it('hides the detached HEAD and primary badges when their properties are off', () => {
+    worktreeCardProperties = ['status']
+
+    const detached = renderToStaticMarkup(
+      <WorktreeCard
+        worktree={makeWorktree({ displayName: 'orca', branch: '' })}
+        repo={makeRepo()}
+        isActive={false}
+        hideRepoBadge
+      />
+    )
+    const primary = renderToStaticMarkup(
+      <WorktreeCard
+        worktree={makeWorktree({ displayName: 'main', branch: 'main', isMainWorktree: true })}
+        repo={makeRepo()}
+        isActive={false}
+        hideRepoBadge
+      />
+    )
+
+    expect(detached).not.toContain('Detached HEAD @ abc123')
+    expect(primary).not.toContain('>primary<')
   })
 
   it('omits the repeated branch metadata row when compact cards are enabled', () => {
@@ -390,7 +414,7 @@ describe('WorktreeCard quick actions', () => {
   })
 
   it('uses the left status lane and primary badge when compact cards are disabled', () => {
-    worktreeCardProperties = ['status']
+    worktreeCardProperties = ['status', 'primary']
 
     const markup = renderToStaticMarkup(
       <WorktreeCard

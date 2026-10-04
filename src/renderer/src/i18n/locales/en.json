@@ -5799,7 +5799,9 @@
           "219ebf1961": "Branch name",
           "folderPathIdentity": "Branch / folder path",
           "cli": "Orca CLI",
-          "workspaceOptions": "Workspace options"
+          "workspaceOptions": "Workspace options",
+          "primary": "Primary",
+          "detachedHead": "Detached HEAD"
         },
         "SshTargetRow": {
           "4677394048": "Connecting…",
@@ -9662,6 +9664,12 @@
               "description": "Inside project groups, hide primary checkouts and fold projects with no other worktree into one line.",
               "group": "group",
               "primary": "primary"
+            },
+            "showActivityButton": {
+              "title": "Show Activity Button",
+              "description": "Show the bell button that opens the activity view at the top of the left sidebar.",
+              "bell": "bell",
+              "activity": "activity"
             }
           }
         },

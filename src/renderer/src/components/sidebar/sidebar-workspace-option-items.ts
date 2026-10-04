@@ -4,6 +4,7 @@ import type {
 } from '../../../../shared/ui-chrome-types'
 import { TASK_WORKTREE_CARD_PROPERTIES } from '../../../../shared/constants'
 import { translate } from '@/i18n/i18n'
+import { PROPERTY_OPTIONS } from './worktree-card-display-property-options'
 
 export const GROUP_BY_OPTIONS = [
   {
@@ -130,6 +131,16 @@ const BASE_WORKTREE_CARD_PROPERTY_OPTIONS: WorktreeCardPropertyOption[] = [
       return translate('auto.components.sidebar.SidebarWorkspaceOptionsMenu.host', 'Host')
     }
   },
+  // Why: reuse the display menu's badge labels so both menus name them the same way.
+  ...PROPERTY_OPTIONS.filter(({ id }) => id === 'primary' || id === 'detached-head').map(
+    (option) => ({
+      id: option.id,
+      properties: [option.id],
+      get label() {
+        return option.label
+      }
+    })
+  ),
   {
     id: 'branch',
     properties: ['branch'],

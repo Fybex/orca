@@ -46,6 +46,9 @@ export type WorktreeCardProperty =
   | 'inline-agents'
   // Execution-host pill, shown only when the visible workspaces span more than one host; on by default.
   | 'host'
+  // "primary" badge on the original clone and the Detached HEAD badge; on by default.
+  | 'primary'
+  | 'detached-head'
 
 export type WorktreeCardMode = 'Default' | 'Compact'
 

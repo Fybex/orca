@@ -73,5 +73,20 @@ export const PROPERTY_OPTIONS: { id: WorktreeCardProperty; label: string }[] = [
     get label() {
       return translate('auto.components.sidebar.SidebarWorkspaceOptionsMenu.host', 'Host')
     }
+  },
+  {
+    id: 'primary',
+    get label() {
+      return translate('auto.components.sidebar.SidebarWorkspaceOptionsMenu.primary', 'Primary')
+    }
+  },
+  {
+    id: 'detached-head',
+    get label() {
+      return translate(
+        'auto.components.sidebar.SidebarWorkspaceOptionsMenu.detachedHead',
+        'Detached HEAD'
+      )
+    }
   }
 ]

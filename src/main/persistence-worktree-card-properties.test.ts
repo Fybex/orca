@@ -82,7 +82,9 @@ describe('Store', () => {
       'comment',
       'ports',
       'inline-agents',
-      'host'
+      'host',
+      'primary',
+      'detached-head'
     ])
     expect(store.getUI()._inlineAgentsDefaultedForAllUsers).toBe(true)
     expect(store.getUI()._expandedWorktreeCardPropertiesDefaulted).toBe(true)
@@ -120,7 +122,9 @@ describe('Store', () => {
       'comment',
       'ports',
       'inline-agents',
-      'host'
+      'host',
+      'primary',
+      'detached-head'
     ])
     expect(store.getUI().worktreeCardProperties).not.toContain('branch')
     expect(store.getUI()._inlineAgentsDefaultedForAllUsers).toBe(true)
@@ -151,7 +155,9 @@ describe('Store', () => {
       'comment',
       'ports',
       'inline-agents',
-      'host'
+      'host',
+      'primary',
+      'detached-head'
     ])
     expect(store.getUI().worktreeCardProperties).not.toContain('branch')
     expect(store.getUI()._worktreeCardModeDefaulted).toBe(true)
@@ -182,7 +188,9 @@ describe('Store', () => {
       'pr',
       'ports',
       'inline-agents',
-      'host'
+      'host',
+      'primary',
+      'detached-head'
     ])
     expect(store.getUI().worktreeCardProperties).not.toContain('branch')
   })
@@ -204,7 +212,14 @@ describe('Store', () => {
     })
     const store = await createStore()
 
-    expect(store.getUI().worktreeCardProperties).toEqual(['status', 'unread', 'pr', 'host'])
+    expect(store.getUI().worktreeCardProperties).toEqual([
+      'status',
+      'unread',
+      'pr',
+      'host',
+      'primary',
+      'detached-head'
+    ])
     expect(store.getUI().worktreeCardProperties).not.toContain('branch')
     expect(store.getUI().worktreeCardProperties).not.toContain('ports')
     expect(store.getUI().worktreeCardProperties).not.toContain('inline-agents')
@@ -273,7 +288,9 @@ describe('Store', () => {
       'pr',
       'comment',
       'ports',
-      'host'
+      'host',
+      'primary',
+      'detached-head'
     ])
     expect(store.getUI().worktreeCardProperties).not.toContain('branch')
     expect(store.getUI().worktreeCardProperties).not.toContain('inline-agents')
@@ -312,7 +329,9 @@ describe('Store', () => {
       'pr',
       'ports',
       'inline-agents',
-      'host'
+      'host',
+      'primary',
+      'detached-head'
     ])
     expect(
       store.getUI().worktreeCardProperties?.filter((property) => property === 'jira-issue')
@@ -343,7 +362,9 @@ describe('Store', () => {
       'issue',
       'linear-issue',
       'pr',
-      'host'
+      'host',
+      'primary',
+      'detached-head'
     ])
     expect(store.getUI().worktreeCardProperties).not.toContain('jira-issue')
   })
@@ -454,7 +475,8 @@ describe('Store', () => {
         _inlineAgentsDefaultedForAllUsers: true,
         _expandedWorktreeCardPropertiesDefaulted: true,
         _jiraIssueWorktreeCardPropertyDefaulted: true,
-        _hostWorktreeCardPropertyDefaulted: true
+        _hostWorktreeCardPropertyDefaulted: true,
+        _badgeWorktreeCardPropertiesDefaulted: true
       },
       githubCache: { pr: {}, issue: {} },
       workspaceSession: {}
@@ -463,6 +485,49 @@ describe('Store', () => {
 
     expect(store.getUI().worktreeCardProperties).toEqual(['status', 'unread', 'pr'])
     expect(store.getUI().worktreeCardProperties).not.toContain('host')
+  })
+
+  it('backfills the primary and detached HEAD badges once, then keeps their removal', async () => {
+    const stampedBeforeBadges = {
+      _inlineAgentsDefaultedForAllUsers: true,
+      _expandedWorktreeCardPropertiesDefaulted: true,
+      _jiraIssueWorktreeCardPropertyDefaulted: true,
+      _hostWorktreeCardPropertyDefaulted: true
+    }
+    writeDataFile({
+      schemaVersion: 1,
+      repos: [],
+      worktreeMeta: {},
+      settings: { compactWorktreeCards: false },
+      ui: { worktreeCardProperties: ['status', 'unread', 'pr'], ...stampedBeforeBadges },
+      githubCache: { pr: {}, issue: {} },
+      workspaceSession: {}
+    })
+    const backfilled = await createStore()
+    expect(backfilled.getUI().worktreeCardProperties).toEqual([
+      'status',
+      'unread',
+      'pr',
+      'primary',
+      'detached-head'
+    ])
+    expect(backfilled.getUI()._badgeWorktreeCardPropertiesDefaulted).toBe(true)
+
+    writeDataFile({
+      schemaVersion: 1,
+      repos: [],
+      worktreeMeta: {},
+      settings: { compactWorktreeCards: false },
+      ui: {
+        worktreeCardProperties: ['status', 'unread', 'pr'],
+        ...stampedBeforeBadges,
+        _badgeWorktreeCardPropertiesDefaulted: true
+      },
+      githubCache: { pr: {}, issue: {} },
+      workspaceSession: {}
+    })
+    const optedOut = await createStore()
+    expect(optedOut.getUI().worktreeCardProperties).toEqual(['status', 'unread', 'pr'])
   })
 
   it.each([

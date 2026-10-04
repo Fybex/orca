@@ -10,4 +10,6 @@ export type AttentionDisplaySettings = {
   experimentalAgentDashboardShowIdle?: boolean
   /** Focusing or typing in an agent's terminal marks it read without the idle check. */
   agentReadOnTerminalFocus?: boolean
+  /** Show the bell (activity view) button in the left sidebar header. */
+  showActivityButton?: boolean
 }

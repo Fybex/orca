@@ -22,7 +22,9 @@ export const DEFAULT_WORKTREE_CARD_PROPERTIES: WorktreeCardProperty[] = [
   // the Default mode keeps it inline on each card while Compact removes the
   // extra row.
   'inline-agents',
-  'host'
+  'host',
+  'primary',
+  'detached-head'
 ]
 
 // Why: compact cards default to the quiet preset; metadata icons remain opt-in
@@ -57,7 +59,9 @@ export const WORKTREE_CARD_PROPERTIES = [
   'comment',
   'ports',
   'inline-agents',
-  'host'
+  'host',
+  'primary',
+  'detached-head'
 ] as const satisfies readonly WorktreeCardProperty[]
 
 export function normalizeWorktreeCardProperties(
