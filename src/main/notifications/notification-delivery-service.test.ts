@@ -16,6 +16,7 @@ function makeSettings(overrides: Partial<NotificationSettings> = {}): Notificati
   return {
     enabled: true,
     agentTaskComplete: true,
+    agentNeedsInput: true,
     terminalBell: true,
     suppressWhenFocused: false,
     customSoundId: 'system',
@@ -109,9 +110,44 @@ describe('createNotificationDeliveryService', () => {
 
     expect(result).toEqual({ delivered: false, reason: 'source-disabled' })
     expect(harness.dispatchMobileNotification).toHaveBeenCalledWith(
-      expect.objectContaining({ desktopAllowed: false, source: 'agent-task-complete' })
+      expect.objectContaining({
+        desktopAllowed: false,
+        source: 'agent-task-complete'
+      })
     )
     expect(harness.order).toEqual(['tray', 'mobile'])
+  })
+
+  it('banners a waiting agent while finished-turn banners are off', () => {
+    const harness = makeHarness(makeSettings({ agentTaskComplete: false }))
+    const service = createNotificationDeliveryService(harness.deps)
+    expect(service.dispatch(makeRequest({ agentState: 'done' }))).toEqual({
+      delivered: false,
+      reason: 'source-disabled'
+    })
+    expect(service.dispatch(makeRequest({ agentState: 'waiting' }))).toEqual({
+      delivered: true
+    })
+  })
+
+  it('silences a waiting agent when only the needs-input switch is off', () => {
+    const harness = makeHarness(makeSettings({ agentNeedsInput: false }))
+    const service = createNotificationDeliveryService(harness.deps)
+    expect(service.dispatch(makeRequest({ agentState: 'blocked' }))).toEqual({
+      delivered: false,
+      reason: 'source-disabled'
+    })
+  })
+
+  it('does not let a finish banner swallow a question from the same worktree', () => {
+    const harness = makeHarness(makeSettings())
+    const service = createNotificationDeliveryService(harness.deps)
+    expect(service.dispatch(makeRequest({ agentState: 'done' }))).toEqual({
+      delivered: true
+    })
+    expect(service.dispatch(makeRequest({ agentState: 'waiting' }))).toEqual({
+      delivered: true
+    })
   })
 
   it('keeps the desktop source gates distinct per source', () => {
@@ -142,7 +178,11 @@ describe('createNotificationDeliveryService', () => {
     // Other machines, and requests whose machine is unknown, still notify.
     expect(
       service.dispatch(
-        makeRequest({ notificationSourceId: 'local', worktreeId: 'wt-2', worktreeLabel: 'wt-2' })
+        makeRequest({
+          notificationSourceId: 'local',
+          worktreeId: 'wt-2',
+          worktreeLabel: 'wt-2'
+        })
       )
     ).toEqual({ delivered: true })
     expect(service.dispatch(makeRequest({ worktreeId: 'wt-3', worktreeLabel: 'wt-3' }))).toEqual({
@@ -152,7 +192,10 @@ describe('createNotificationDeliveryService', () => {
 
   it('reports the master switch over a muted machine', () => {
     const harness = makeHarness(
-      makeSettings({ enabled: false, mutedNotificationSourceIds: ['runtime:m4air'] })
+      makeSettings({
+        enabled: false,
+        mutedNotificationSourceIds: ['runtime:m4air']
+      })
     )
     expect(
       createNotificationDeliveryService(harness.deps).dispatch(
@@ -190,7 +233,10 @@ describe('createNotificationDeliveryService', () => {
     const prompt = (attentionKey: string) => makeRequest({ agentState: 'blocked', attentionKey })
     expect(service.dispatch(prompt('p1'))).toEqual({ delivered: true })
     expect(service.dispatch(prompt('p2'))).toEqual({ delivered: true })
-    expect(service.dispatch(prompt('p2'))).toEqual({ delivered: false, reason: 'cooldown' })
+    expect(service.dispatch(prompt('p2'))).toEqual({
+      delivered: false,
+      reason: 'cooldown'
+    })
     expect(harness.dispatchMobileNotification).toHaveBeenCalledWith(
       expect.objectContaining({ attentionKey: 'p1', agentState: 'blocked' })
     )
@@ -236,11 +282,18 @@ it.each<Partial<NotificationSettings>>([{}, { enabled: false }, { agentTaskCompl
         devices: [{ deviceId: 'phone', pushRegistration: registration() }]
       })
       const harness = makeHarness(
-        makeSettings({ ...overrides, mutedNotificationSourceIds: muted ? ['runtime:qa'] : [] })
+        makeSettings({
+          ...overrides,
+          mutedNotificationSourceIds: muted ? ['runtime:qa'] : []
+        })
       )
       harness.deps.dispatchMobileNotification = (event) => {
         events.push(event)
-        push.dispatcher.enqueue({ ...event, notificationSeq: 1, notificationEpoch: 'epoch' })
+        push.dispatcher.enqueue({
+          ...event,
+          notificationSeq: 1,
+          notificationEpoch: 'epoch'
+        })
       }
       createNotificationDeliveryService(harness.deps).dispatch(
         makeRequest({ notificationSourceId: 'runtime:qa', agentState: 'done' })
@@ -259,7 +312,10 @@ it('changing a machine mute preserves mobile cooldown and does not reserve deskt
   const harness = makeHarness(settings)
   const service = createNotificationDeliveryService(harness.deps)
   const request = makeRequest({ notificationSourceId: 'runtime:qa' })
-  expect(service.dispatch(request)).toEqual({ delivered: false, reason: 'host-muted' })
+  expect(service.dispatch(request)).toEqual({
+    delivered: false,
+    reason: 'host-muted'
+  })
   settings.mutedNotificationSourceIds = []
   expect(service.dispatch(request)).toEqual({ delivered: true })
   expect(harness.dispatchMobileNotification).toHaveBeenCalledTimes(1)
@@ -267,7 +323,10 @@ it('changing a machine mute preserves mobile cooldown and does not reserve deskt
 
 it('reports a muted host before a disabled source', () => {
   const harness = makeHarness(
-    makeSettings({ agentTaskComplete: false, mutedNotificationSourceIds: ['runtime:qa'] })
+    makeSettings({
+      agentTaskComplete: false,
+      mutedNotificationSourceIds: ['runtime:qa']
+    })
   )
   expect(
     createNotificationDeliveryService(harness.deps).dispatch(

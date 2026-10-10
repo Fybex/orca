@@ -28,6 +28,7 @@ function wire(host: StructuredAgentSessionHost, controller: RuntimeMobileNotific
     readNotificationSettings: () => ({
       enabled: true,
       agentTaskComplete: true,
+      agentNeedsInput: true,
       terminalBell: true,
       suppressWhenFocused: false,
       customSoundId: 'system',
@@ -63,7 +64,10 @@ describe('prompt delivery after host recovery', () => {
     const unsubscribe = wire(h.host, original)
     const body = hostTestMessage('Work')
     expect(
-      await h.host.send(CALLER, { envelope: envelope('agentSession.send', { body }), body })
+      await h.host.send(CALLER, {
+        envelope: envelope('agentSession.send', { body }),
+        body
+      })
     ).toMatchObject({ ok: true })
     const prompt = await seedApproval()
     const delivered = sent.find((event) => event.type === 'notification')
@@ -100,7 +104,10 @@ describe('prompt delivery after host recovery', () => {
     try {
       await host.reconcileRestartLeases()
       await host.restoreReadableSessions()
-      const history = await host.history({ sessionId: SESSION, direction: 'tail' })
+      const history = await host.history({
+        sessionId: SESSION,
+        direction: 'tail'
+      })
       expect(history.ok).toBe(true)
       expect(
         history.ok ? history.page.items.find((item) => item.itemId === prompt.itemId)?.body : null

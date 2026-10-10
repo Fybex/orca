@@ -30,6 +30,7 @@ function createSettings(): GlobalSettings {
     notifications: {
       enabled: true,
       agentTaskComplete: true,
+      agentNeedsInput: true,
       terminalBell: true,
       suppressWhenFocused: true,
       customSoundId: 'system',
@@ -80,7 +81,9 @@ describe('NotificationsPane', () => {
         platform: 'darwin' as NodeJS.Platform,
         requested: true
       })),
-      dispatch: vi.fn(async (_args: NotificationDispatchRequest) => ({ delivered: true })),
+      dispatch: vi.fn(async (_args: NotificationDispatchRequest) => ({
+        delivered: true
+      })),
       playSound: vi.fn(),
       openSystemSettings: vi.fn(),
       requestPermission: vi.fn()
@@ -125,7 +128,9 @@ describe('NotificationsPane', () => {
         platform: 'win32' as NodeJS.Platform,
         requested: true
       })),
-      dispatch: vi.fn(async (_args: NotificationDispatchRequest) => ({ delivered: true })),
+      dispatch: vi.fn(async (_args: NotificationDispatchRequest) => ({
+        delivered: true
+      })),
       playSound: vi.fn(),
       openSystemSettings: vi.fn(),
       requestPermission: vi.fn()

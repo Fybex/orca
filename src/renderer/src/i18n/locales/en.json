@@ -8011,6 +8011,8 @@
           "b6fc369244": "A background terminal emits a bell character.",
           "591fe605b9": "Terminal Bell",
           "55f901a59b": "A coding agent finishes and becomes idle.",
+          "1cfe63b578": "Agent Needs Input",
+          "e921180f25": "A coding agent asks a question or waits for your permission.",
           "ca76d06fd2": "Agent Task Complete",
           "deff6d30da": "Native system notifications for background events.",
           "841c8c549f": "Enable Notifications",

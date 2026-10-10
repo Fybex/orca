@@ -50,6 +50,7 @@ export function normalizeNotificationSettings(value: unknown): NotificationSetti
   return {
     enabled: booleanOr(candidate.enabled, defaults.enabled),
     agentTaskComplete: booleanOr(candidate.agentTaskComplete, defaults.agentTaskComplete),
+    agentNeedsInput: booleanOr(candidate.agentNeedsInput, defaults.agentNeedsInput),
     terminalBell: booleanOr(candidate.terminalBell, defaults.terminalBell),
     suppressWhenFocused: booleanOr(candidate.suppressWhenFocused, defaults.suppressWhenFocused),
     customSoundId,
@@ -145,7 +146,9 @@ export function remapLegacyOnboardingLastCompletedStep(
 export function sanitizeOnboardingUpdate(
   input: unknown,
   options: SanitizeOnboardingUpdateOptions = {}
-): Partial<Omit<OnboardingState, 'checklist'>> & { checklist?: Partial<OnboardingChecklistState> } {
+): Partial<Omit<OnboardingState, 'checklist'>> & {
+  checklist?: Partial<OnboardingChecklistState>
+} {
   if (!input || typeof input !== 'object' || Array.isArray(input)) {
     return {}
   }

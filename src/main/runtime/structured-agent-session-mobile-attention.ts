@@ -22,12 +22,16 @@ import type {
   NotificationSettings
 } from '../../shared/notification-settings-types'
 import { getRepoIdFromWorktreeId } from '../../shared/worktree/id'
+import { isAgentNotificationDesktopAllowed } from '../../shared/notification-settings-defaults'
 import { buildNotificationOptions } from '../ipc/notification-options'
 import type { MobileNotificationDispatchEvent } from './runtime-mobile-notification-controller'
 import type { RuntimeStore } from './runtime-store-contract'
 import { getRuntimeDesktopSurface } from './runtime-desktop-surface'
 
-export type StructuredAttentionWorkspaceLabels = { repoLabel?: string; worktreeLabel?: string }
+export type StructuredAttentionWorkspaceLabels = {
+  repoLabel?: string
+  worktreeLabel?: string
+}
 
 export type StructuredAttentionMobileDeliveryDeps = {
   readNotificationSettings: () => NotificationSettings
@@ -103,7 +107,7 @@ export function createStructuredAttentionMobileDelivery(
       )
       const settings = deps.readNotificationSettings()
       // The same eligibility the desktop's own fan-out applies: these preferences gate the phone too.
-      const desktopAllowed = settings.enabled && settings.agentTaskComplete
+      const desktopAllowed = isAgentNotificationDesktopAllowed(settings, request.agentState)
       deps.dispatch({
         type: 'notification',
         emittedAt: deps.now(),

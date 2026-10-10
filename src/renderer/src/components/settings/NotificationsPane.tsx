@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { GlobalSettings } from '../../../../shared/global-settings-types'
 import { Button } from '../ui/button'
 import { Separator } from '../ui/separator'
-import { BellRing, Bot, Siren } from 'lucide-react'
+import { BellRing, Bot, MessageCircleQuestion, Siren } from 'lucide-react'
 import { useAppStore } from '@/store'
 import {
   MacNotificationPermissionCard,
@@ -123,7 +123,9 @@ export function NotificationsPane({
           if (!notificationSettings.enabled) {
             useAppStore.getState().recordFeatureInteraction('notifications')
           }
-          void updateNotificationSettings({ enabled: !notificationSettings.enabled })
+          void updateNotificationSettings({
+            enabled: !notificationSettings.enabled
+          })
         }}
       />
 
@@ -144,6 +146,25 @@ export function NotificationsPane({
         onToggle={() =>
           void updateNotificationSettings({
             agentTaskComplete: !notificationSettings.agentTaskComplete
+          })
+        }
+      />
+
+      <NotificationSettingToggle
+        icon={<MessageCircleQuestion className="size-4" />}
+        label={translate(
+          'auto.components.settings.NotificationsPane.1cfe63b578',
+          'Agent Needs Input'
+        )}
+        description={translate(
+          'auto.components.settings.NotificationsPane.e921180f25',
+          'A coding agent asks a question or waits for your permission.'
+        )}
+        checked={notificationSettings.agentNeedsInput}
+        disabled={!notificationSettings.enabled}
+        onToggle={() =>
+          void updateNotificationSettings({
+            agentNeedsInput: !notificationSettings.agentNeedsInput
           })
         }
       />

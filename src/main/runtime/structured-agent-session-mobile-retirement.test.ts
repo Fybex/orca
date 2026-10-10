@@ -25,7 +25,11 @@ const USER: AgentJournalRenderItem = {
   revision: 0,
   sequence: 1,
   observedAt: 1,
-  body: { kind: 'message', role: 'user', blocks: [{ type: 'text', text: 'Run the migration' }] }
+  body: {
+    kind: 'message',
+    role: 'user',
+    blocks: [{ type: 'text', text: 'Run the migration' }]
+  }
 }
 
 function turn(outcome?: 'success' | 'failure'): AgentJournalRenderItem {
@@ -87,6 +91,7 @@ describe('host prompt delivery and retirement', () => {
           readNotificationSettings: () => ({
             enabled: true,
             agentTaskComplete: true,
+            agentNeedsInput: true,
             terminalBell: true,
             suppressWhenFocused: false,
             customSoundId: 'system',
@@ -138,7 +143,10 @@ describe('host prompt delivery and retirement', () => {
         expect(legacy).toEqual([
           expect.objectContaining({
             type: 'completion',
-            completion: expect.objectContaining({ outcome, awaitingUser: true })
+            completion: expect.objectContaining({
+              outcome,
+              awaitingUser: true
+            })
           })
         ])
         expect(

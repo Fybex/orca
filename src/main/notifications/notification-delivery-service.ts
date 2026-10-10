@@ -15,6 +15,10 @@ import type { OrcaRuntimeService } from '../runtime/orca-runtime'
 import { buildNotificationOptions } from '../ipc/notification-options'
 import { translateMain } from '../i18n/main-i18n'
 import { reserveNotificationCooldown } from '../ipc/notification-burst-cooldown'
+import {
+  isAgentNeedsInputState,
+  isAgentNotificationDesktopAllowed
+} from '../../shared/notification-settings-defaults'
 
 export type NotificationDeliveryDependencies = {
   readNotificationSettings: () => NotificationSettings
@@ -53,8 +57,11 @@ export function createNotificationDeliveryService(
   const recentMobileNotifications = new Map<string, number>()
 
   // Keyed news is announced once by its producer, so only its own repeat may collapse it.
+  // Why: a question must not be swallowed by a finish or bell banner from the same worktree.
   const dedupeKeyFor = (request: NotificationDispatchRequest): string =>
-    request.attentionKey ?? request.worktreeId ?? request.worktreeLabel ?? 'global'
+    `${request.attentionKey ?? request.worktreeId ?? request.worktreeLabel ?? 'global'}${
+      isAgentNeedsInputState(request.agentState) ? ':needs-input' : ''
+    }`
 
   const deliverNativeAndRecord = (
     request: NotificationDispatchRequest,
@@ -87,9 +94,9 @@ export function createNotificationDeliveryService(
         settings.mutedNotificationSourceIds.includes(request.notificationSourceId)
       // Machine mutes leave mobile eligibility and its cooldown unchanged.
       const desktopAllowed =
-        settings.enabled &&
-        (request.source !== 'agent-task-complete' || settings.agentTaskComplete) &&
-        (request.source !== 'terminal-bell' || settings.terminalBell)
+        request.source === 'agent-task-complete'
+          ? isAgentNotificationDesktopAllowed(settings, request.agentState)
+          : settings.enabled && (request.source !== 'terminal-bell' || settings.terminalBell)
 
       const notificationOptions = buildNotificationOptions(request, translateMain)
 

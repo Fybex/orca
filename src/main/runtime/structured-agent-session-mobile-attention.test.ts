@@ -22,7 +22,12 @@ const SCOPE = {
 
 const PROMPT: AgentSessionAttentionEdge = {
   type: 'prompt',
-  prompt: { scope: SCOPE, sessionId: 'session-1', promptId: 'approval-1', raisedAt: 1 }
+  prompt: {
+    scope: SCOPE,
+    sessionId: 'session-1',
+    promptId: 'approval-1',
+    raisedAt: 1
+  }
 }
 
 function completion(
@@ -56,6 +61,7 @@ function settings(overrides: Partial<NotificationSettings> = {}): NotificationSe
   return {
     enabled: true,
     agentTaskComplete: true,
+    agentNeedsInput: true,
     terminalBell: true,
     suppressWhenFocused: false,
     customSoundId: 'system',
@@ -71,7 +77,10 @@ function harness(overrides: Partial<StructuredAttentionMobileDeliveryDeps> = {})
   const reconciled: StructuredAttentionState[] = []
   const delivery = createStructuredAttentionMobileDelivery({
     readNotificationSettings: () => settings(),
-    readWorkspaceLabels: () => ({ repoLabel: 'orca', worktreeLabel: 'feature' }),
+    readWorkspaceLabels: () => ({
+      repoLabel: 'orca',
+      worktreeLabel: 'feature'
+    }),
     dispatch: (event) => sent.push(event),
     reconcile: (state) => reconciled.push(state),
     now: () => 42,
@@ -123,12 +132,20 @@ describe('structured attention mobile delivery', () => {
     expect(h.sent[0]?.title).toContain('needs input')
   })
 
-  it('marks the push ineligible when agent notifications are off, as the desktop fan-out does', () => {
+  it('marks the push ineligible when needs-input notifications are off, as the desktop fan-out does', () => {
+    const h = harness({
+      readNotificationSettings: () => settings({ agentNeedsInput: false })
+    })
+    h.delivery.deliver(PROMPT, SUMMARY)
+    expect(h.sent[0]).toMatchObject({ desktopAllowed: false })
+  })
+
+  it('keeps a prompt eligible when only finished-turn notifications are off', () => {
     const h = harness({
       readNotificationSettings: () => settings({ agentTaskComplete: false })
     })
     h.delivery.deliver(PROMPT, SUMMARY)
-    expect(h.sent[0]).toMatchObject({ desktopAllowed: false })
+    expect(h.sent[0]).not.toHaveProperty('desktopAllowed')
   })
 
   it('announces nothing for a completion with no verdict', () => {
@@ -144,7 +161,11 @@ describe('structured attention mobile delivery', () => {
 
   it('forwards current prompt state for reconciliation', () => {
     const h = harness()
-    const state = { scope: SCOPE, sessionId: 'session-1', pendingPromptIds: ['a', 'b'] }
+    const state = {
+      scope: SCOPE,
+      sessionId: 'session-1',
+      pendingPromptIds: ['a', 'b']
+    }
     h.delivery.reconcile(state)
     expect(h.reconciled).toEqual([state])
   })

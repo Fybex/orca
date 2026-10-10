@@ -6,6 +6,8 @@ import type { NotificationSourceId } from './notification-source'
 export type NotificationSettings = {
   enabled: boolean
   agentTaskComplete: boolean
+  /** Agent waiting or blocked on you (permission, question); separate from finished-turn banners. */
+  agentNeedsInput: boolean
   terminalBell: boolean
   suppressWhenFocused: boolean
   customSoundId:
