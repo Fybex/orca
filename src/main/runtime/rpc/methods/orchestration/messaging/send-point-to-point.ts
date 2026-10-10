@@ -6,6 +6,7 @@ import { isDispatchMutationMessageType, parseMessageTaskId } from '../schemas'
 import type { SendParams } from '../schemas'
 import { legacyWorkerDeliveryContract } from '../routing'
 import { exposeMessage } from './mailbox-message-receipt'
+import { notifyHumanDecisionMessage } from '../../../../orchestration/human-decision-notification'
 import { recordReceiptForPostCommitNudge } from './mutation-replay-nudge'
 import type { SendRecipientWarning } from './recipient-routing'
 import {
@@ -135,6 +136,7 @@ export function sendPointToPointMessage(args: {
       )
     }
     const receipt = withSendWarnings({ message: exposeMessage(msg) })
+    notifyHumanDecisionMessage(runtime, msg)
     return recordReceiptForPostCommitNudge(recordMutationReceipt, receipt, () =>
       runtime.notifyMessageArrived(msg.to_handle, msg.type)
     )
@@ -196,7 +198,11 @@ function lifecycleRefusal(args: {
     return refusal
   }
   return !coordinatorMutation ||
-    db.isDispatchMessageSender({ dispatchId: dispatch.id, handle: from, paneKey })
+    db.isDispatchMessageSender({
+      dispatchId: dispatch.id,
+      handle: from,
+      paneKey
+    })
     ? null
     : {
         code: 'sender_not_assignee',

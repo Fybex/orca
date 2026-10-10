@@ -15,14 +15,20 @@ import type { BareRecipientResolution, SendRecipientWarning } from './recipient-
 import type { SendParams } from '../schemas'
 import type { OrchestrationCallerIdentity } from '../../../../orchestration/orchestration-caller-identity'
 import type { z } from 'zod'
+import { notifyHumanDecisionMessage } from '../../../../orchestration/human-decision-notification'
 
 type SendParamsInput = z.infer<typeof SendParams>
 type SendReceipt = <T extends object>(receipt: T) => T & { warnings?: SendRecipientWarning[] }
 
-type GroupAgentSnapshot = OrchestrationAddressableAgent & { tabId?: string; leafId?: string }
+type GroupAgentSnapshot = OrchestrationAddressableAgent & {
+  tabId?: string
+  leafId?: string
+}
 
 /** Run candidates already identify a durable mailbox. */
-type GroupCandidate = OrchestrationAddressableAgent & { mailbox?: { to: string; runId: string } }
+type GroupCandidate = OrchestrationAddressableAgent & {
+  mailbox?: { to: string; runId: string }
+}
 
 function listRunGroupCandidates(args: {
   db: OrchestrationDb
@@ -262,6 +268,9 @@ export async function sendGroupMessage(args: {
       resolution.ok ? (resolution.warning ? [resolution.warning] : []) : [resolution.warning]
     )
   )
+  if (messages[0]) {
+    notifyHumanDecisionMessage(runtime, messages[0])
+  }
   const receipt = {
     messages: exposeMessages(messages),
     recipients: messages.length,
