@@ -107,13 +107,20 @@ export function projectWorktreeLineageToWorkspaceLineage(
 export async function setWorktreeLineageForRuntime(
   settings: AppState['settings'],
   worktreeId: string,
-  args: { parentWorktreeId?: string; noParent?: boolean }
+  args: {
+    parentWorktreeId?: string
+    parentFolderWorkspaceId?: string
+    noParent?: boolean
+  }
 ): Promise<WorktreeLineageUpdateResult> {
   const target = getActiveRuntimeTarget(settings)
   if (target.kind === 'local') {
     return {
       target,
-      lineage: await window.api.worktrees.updateLineage({ worktreeId, ...args })
+      lineage: await window.api.worktrees.updateLineage({
+        worktreeId,
+        ...args
+      })
     }
   }
   const result = await callRuntimeRpc<{ worktree: WorktreeWithLineage }>(
@@ -121,9 +128,11 @@ export async function setWorktreeLineageForRuntime(
     'worktree.set',
     {
       worktree: toRuntimeWorktreeSelector(worktreeId),
-      ...(args.parentWorktreeId
-        ? { parentWorktree: toRuntimeWorktreeSelector(args.parentWorktreeId) }
-        : {}),
+      ...(args.parentFolderWorkspaceId
+        ? { parentWorktree: `folder:${args.parentFolderWorkspaceId}` }
+        : args.parentWorktreeId
+          ? { parentWorktree: toRuntimeWorktreeSelector(args.parentWorktreeId) }
+          : {}),
       ...(args.noParent === true ? { noParent: true } : {})
     },
     { timeoutMs: 15_000 }

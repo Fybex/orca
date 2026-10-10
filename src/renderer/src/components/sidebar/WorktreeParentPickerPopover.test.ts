@@ -5,10 +5,13 @@ import type { Worktree } from '../../../../shared/worktree/types'
 import {
   getWorktreeParentPickerFocusRestoreTarget,
   handleWorktreeParentPickerKeyDown,
-  selectWorktreeParent
+  selectWorktreeParent,
+  toWorktreeParentAssignment
 } from './WorktreeParentPickerPopover'
+import type { FolderWorkspace } from '../../../../shared/folder-workspace-types'
 import {
   clampWorktreeParentPickerIndex,
+  filterParentPickerCandidates,
   filterWorktreeParentCandidates,
   getWorktreeParentPickerItemValue
 } from './worktree-parent-picker-filtering'
@@ -54,14 +57,16 @@ describe('selectWorktreeParent', () => {
 
     selectWorktreeParent({
       childWorktreeId: 'child',
-      parentWorktreeId: 'parent',
+      parent: { parentWorktreeId: 'parent' },
       assignWorktreeParent,
       close,
       showError
     })
 
     expect(close).toHaveBeenCalledTimes(1)
-    expect(assignWorktreeParent).toHaveBeenCalledWith('child', { parentWorktreeId: 'parent' })
+    expect(assignWorktreeParent).toHaveBeenCalledWith('child', {
+      parentWorktreeId: 'parent'
+    })
     expect(showError).not.toHaveBeenCalled()
   })
 
@@ -73,7 +78,7 @@ describe('selectWorktreeParent', () => {
 
     selectWorktreeParent({
       childWorktreeId: 'child',
-      parentWorktreeId: 'parent',
+      parent: { parentWorktreeId: 'parent' },
       assignWorktreeParent,
       close,
       showError
@@ -90,7 +95,7 @@ describe('selectWorktreeParent', () => {
 
     selectWorktreeParent({
       childWorktreeId: null,
-      parentWorktreeId: 'parent',
+      parent: { parentWorktreeId: 'parent' },
       assignWorktreeParent,
       close,
       showError: vi.fn()
@@ -110,7 +115,11 @@ describe('getWorktreeParentPickerItemValue', () => {
 })
 
 describe('filterWorktreeParentCandidates', () => {
-  const alpha = makeWorktree({ id: 'alpha', displayName: 'alpha', path: '/workspaces/alpha' })
+  const alpha = makeWorktree({
+    id: 'alpha',
+    displayName: 'alpha',
+    path: '/workspaces/alpha'
+  })
   const beta = makeWorktree({
     id: 'beta',
     displayName: 'beta',
@@ -130,6 +139,56 @@ describe('filterWorktreeParentCandidates', () => {
   it('matches on branch and path, not just display name', () => {
     expect(filterWorktreeParentCandidates([alpha, beta], 'follow-up')).toEqual([beta])
     expect(filterWorktreeParentCandidates([alpha, beta], '/workspaces/beta')).toEqual([beta])
+  })
+})
+
+function makeFolder(overrides: Partial<FolderWorkspace> = {}): FolderWorkspace {
+  return {
+    id: 'folder-1',
+    projectGroupId: 'group',
+    name: 'checkout-redesign',
+    folderPath: '/projects/checkout-redesign',
+    linkedTask: null,
+    comment: '',
+    isArchived: false,
+    isUnread: false,
+    isPinned: false,
+    sortOrder: 0,
+    lastActivityAt: 0,
+    createdAt: 0,
+    updatedAt: 0,
+    ...overrides
+  }
+}
+
+describe('filterParentPickerCandidates', () => {
+  const folder = makeFolder()
+  const worktree = makeWorktree({ id: 'wt', displayName: 'checkout mr1' })
+
+  it('lists matching folders ahead of worktrees with folder workspace keys', () => {
+    expect(filterParentPickerCandidates([folder], [worktree], 'checkout')).toEqual([
+      { kind: 'folder', id: 'folder:folder-1', folder },
+      { kind: 'worktree', id: 'wt', worktree }
+    ])
+  })
+
+  it('filters folders by name and path', () => {
+    expect(filterParentPickerCandidates([folder], [worktree], 'mr1')).toEqual([
+      { kind: 'worktree', id: 'wt', worktree }
+    ])
+  })
+
+  it('maps a folder pick to a folder parent assignment', () => {
+    expect(
+      toWorktreeParentAssignment({
+        kind: 'folder',
+        id: 'folder:folder-1',
+        folder
+      })
+    ).toEqual({ parentFolderWorkspaceId: 'folder-1' })
+    expect(toWorktreeParentAssignment({ kind: 'worktree', id: 'wt', worktree })).toEqual({
+      parentWorktreeId: 'wt'
+    })
   })
 })
 
@@ -223,7 +282,13 @@ describe('parent picker keyboard input', () => {
         preventDefault,
         stopPropagation
       } as unknown as React.KeyboardEvent<HTMLInputElement>,
-      candidates: [{ id: 'parent' }],
+      candidates: [
+        {
+          kind: 'worktree',
+          id: 'parent',
+          worktree: makeWorktree({ id: 'parent' })
+        }
+      ],
       activeIndex: 0,
       moveHighlight,
       selectParent

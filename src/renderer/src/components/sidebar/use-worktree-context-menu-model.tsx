@@ -7,12 +7,13 @@ import {
   getLineageRenderInfo
 } from './worktree-lineage-projection'
 import { getWorkspaceStatus } from './workspace-status'
-import { getEligibleWorktreeParents } from './worktree-parent-candidates'
+import { getEligibleFolderParents, getEligibleWorktreeParents } from './worktree-parent-candidates'
 import {
   hasSleepableWorkspaceActivity,
   useWorkspaceLineageMenuActions
 } from './workspace-lineage-menu-actions'
 import { parseWorkspaceKey } from '../../../../shared/workspace-scope'
+import type { FolderWorkspace } from '../../../../shared/folder-workspace-types'
 import { getDeleteStateForWorktreeHost } from './worktree-delete-state-host-match'
 import {
   EMPTY_BROWSER_TABS_BY_WORKTREE,
@@ -31,6 +32,8 @@ import { useWorktreeContextMenuCommands } from './use-worktree-context-menu-comm
 import { useWorktreeParentPickerTransition } from './use-worktree-parent-picker-transition'
 import { useWorktreeContextMenuSecondaryActions } from './use-worktree-context-menu-secondary-actions'
 import { CLOSE_ALL_CONTEXT_MENUS_EVENT } from '@/lib/close-all-context-menus'
+
+const EMPTY_FOLDER_WORKSPACES: readonly FolderWorkspace[] = []
 
 export type WorktreeContextMenuProps = {
   worktree: Worktree
@@ -67,6 +70,10 @@ export function useWorktreeContextMenuModel({
     getDeleteStateForWorktreeHost(worktree, s.deleteStateByWorktreeId)
   )
   const [menuOpen, setMenuOpen] = useState(false)
+  // Why: menu-scoped like the lineage maps, so folder edits don't re-render every closed card.
+  const folderWorkspaces = useAppStore((s) =>
+    menuOpen ? s.folderWorkspaces : EMPTY_FOLDER_WORKSPACES
+  )
   // Why: the Developer submenu is a power-user affordance, so it is revealed by
   // holding Option/Alt at right-click — captured at open time (like the Help
   // menu's admin options) so the submenu can't appear or vanish mid-menu and
@@ -220,9 +227,27 @@ export function useWorktreeContextMenuModel({
             worktreeMap,
             repoMap,
             cyclicLineageIds
+          }).length +
+          getEligibleFolderParents({
+            child: worktree,
+            folderWorkspaces,
+            projectGroups,
+            workspaceLineageByChildKey,
+            repoMap
           }).length
         : 0,
-    [allWorktrees, cyclicLineageIds, menuOpen, repoMap, worktree, worktreeLineageById, worktreeMap]
+    [
+      allWorktrees,
+      cyclicLineageIds,
+      folderWorkspaces,
+      menuOpen,
+      projectGroups,
+      repoMap,
+      workspaceLineageByChildKey,
+      worktree,
+      worktreeLineageById,
+      worktreeMap
+    ]
   )
 
   const setMenuOpenState = useCallback(

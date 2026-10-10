@@ -91,5 +91,13 @@ export function createAssignWorktreeParent(
       await refreshWorktreeLineageBestEffort(ownerSettings, set, get)
       throw err
     }
+    if ('parentFolderWorkspaceId' in args) {
+      // Why: a folder parent lives only in workspace lineage, which the worktree-lineage reply can't carry.
+      try {
+        await refreshWorktreeLineageForSettings(ownerSettings, set, get)
+      } catch (err) {
+        console.error('Failed to refresh lineage after assigning a folder parent:', err)
+      }
+    }
   }
 }

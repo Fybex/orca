@@ -6405,9 +6405,10 @@
         "WorktreeParentPickerPopover": {
           "failedSetParent": "Failed to set parent worktree",
           "current": "Current",
-          "searchPlaceholder": "Search worktrees...",
-          "empty": "No matching eligible worktrees.",
-          "setParentFor": "Set parent for"
+          "searchPlaceholder": "Search folders and worktrees...",
+          "empty": "No matching folders or worktrees.",
+          "setParentFor": "Set parent for",
+          "folder": "Folder"
         },
         "WorktreeCardStatusSlot": {
           "branchIdentity": "Branch",

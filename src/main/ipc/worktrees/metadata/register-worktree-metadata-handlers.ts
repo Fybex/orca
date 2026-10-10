@@ -75,14 +75,24 @@ export function registerWorktreeMetadataHandlers(context: WorktreeIpcContext): v
 
   ipcMain.handle(
     'worktrees:updateLineage',
-    async (_event, args: { worktreeId: string; parentWorktreeId?: string; noParent?: boolean }) => {
+    async (
+      _event,
+      args: {
+        worktreeId: string
+        parentWorktreeId?: string
+        parentFolderWorkspaceId?: string
+        noParent?: boolean
+      }
+    ) => {
       await runtime.updateManagedWorktreeMeta(args.worktreeId, {
         lineage:
           args.noParent === true
             ? { noParent: true }
-            : args.parentWorktreeId
-              ? { parentWorktree: `id:${args.parentWorktreeId}` }
-              : undefined
+            : args.parentFolderWorkspaceId
+              ? { parentWorktree: `folder:${args.parentFolderWorkspaceId}` }
+              : args.parentWorktreeId
+                ? { parentWorktree: `id:${args.parentWorktreeId}` }
+                : undefined
       })
       notifyWorktreesChanged(mainWindow, parseWorktreeId(args.worktreeId).repoId)
       return store.getWorktreeLineage(args.worktreeId) ?? null
@@ -99,7 +109,9 @@ export function registerWorktreeMetadataHandlers(context: WorktreeIpcContext): v
       Date.now()
     )
     for (const update of updates) {
-      store.setWorktreeMeta(update.worktreeId, { sortOrder: update.sortOrder })
+      store.setWorktreeMeta(update.worktreeId, {
+        sortOrder: update.sortOrder
+      })
     }
   })
 

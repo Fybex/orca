@@ -1,10 +1,11 @@
 import React from 'react'
-import { GitBranch, Server } from 'lucide-react'
+import { Folder, GitBranch, Server } from 'lucide-react'
 import { RepoBadgeMark } from '@/components/repo/RepoBadgeLabel'
 import { getWorktreeStatusLabel, type WorktreeStatus } from '@/lib/worktree-status'
 import { translate } from '@/i18n/i18n'
 import { branchDisplayName } from './WorktreeCardHelpers'
 import StatusIndicator from './StatusIndicator'
+import type { FolderWorkspace } from '../../../../shared/folder-workspace-types'
 import type { Repo } from '../../../../shared/repo-types'
 import type { Worktree } from '../../../../shared/worktree/types'
 
@@ -46,6 +47,29 @@ export const WorktreeParentPickerRow = React.memo(function WorktreeParentPickerR
           {repo?.connectionId ? <Server className="size-3 shrink-0" /> : null}
           <GitBranch className="size-3 shrink-0" />
           <span className="truncate">{branch}</span>
+        </div>
+      </div>
+    </div>
+  )
+})
+
+export const FolderParentPickerRow = React.memo(function FolderParentPickerRow({
+  folder
+}: {
+  folder: Pick<FolderWorkspace, 'name' | 'folderPath'>
+}): React.JSX.Element {
+  return (
+    <div className="flex min-w-0 flex-1 items-start gap-2">
+      <Folder className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
+      <div className="min-w-0 flex-1">
+        <div className="flex min-w-0 items-center gap-1.5">
+          <span className="truncate text-[13px] font-medium">{folder.name}</span>
+          <span className="shrink-0 rounded border border-border bg-muted px-1.5 py-px text-[9px] font-medium leading-none text-muted-foreground">
+            {translate('auto.components.sidebar.WorktreeParentPickerPopover.folder', 'Folder')}
+          </span>
+        </div>
+        <div className="mt-1 truncate text-[11px] leading-none text-muted-foreground">
+          {folder.folderPath}
         </div>
       </div>
     </div>

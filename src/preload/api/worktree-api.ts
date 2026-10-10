@@ -89,7 +89,12 @@ export type WorktreeApi = {
     targetBranch?: string
     isCrossRepository?: boolean
   }) => Promise<
-    { baseBranch: string; compareBaseRef?: string; pushTarget?: GitPushTarget } | { error: string }
+    | {
+        baseBranch: string
+        compareBaseRef?: string
+        pushTarget?: GitPushTarget
+      }
+    | { error: string }
   >
   previewNestedRemoval?: (args: {
     worktreeId: string
@@ -135,6 +140,7 @@ export type WorktreeApi = {
   updateLineage: (args: {
     worktreeId: string
     parentWorktreeId?: string
+    parentFolderWorkspaceId?: string
     noParent?: boolean
   }) => Promise<WorktreeLineage | null>
   persistSortOrder: (args: { orderedIds: string[] }) => Promise<void>

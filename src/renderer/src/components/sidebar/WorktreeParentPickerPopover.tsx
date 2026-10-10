@@ -16,12 +16,14 @@ import { useAllWorktrees, useRepoMap, useWorktreeMap } from '@/store/selectors'
 import { cn } from '@/lib/utils'
 import { isImeCompositionKeyDown } from '@/lib/ime-composition-keyboard-event'
 import { useWorktreeActivityStatuses } from './use-worktree-activity-statuses'
-import { WorktreeParentPickerRow } from './WorktreeParentPickerRow'
-import { getEligibleWorktreeParents } from './worktree-parent-candidates'
+import { FolderParentPickerRow, WorktreeParentPickerRow } from './WorktreeParentPickerRow'
+import { getEligibleFolderParents, getEligibleWorktreeParents } from './worktree-parent-candidates'
 import {
   clampWorktreeParentPickerIndex,
-  filterWorktreeParentCandidates
+  filterParentPickerCandidates,
+  type WorktreeParentPickerCandidate
 } from './worktree-parent-picker-filtering'
+import type { WorktreeParentAssignment } from '@/store/slices/worktree-helpers'
 import {
   clampWorktreeParentPickerAnchorTop,
   estimateWorktreeParentPickerHeight,
@@ -43,18 +45,18 @@ type AnchorRect = Pick<DOMRect, 'height' | 'left' | 'top' | 'width'>
 
 type SelectParentArgs = {
   childWorktreeId: string | null
-  parentWorktreeId: string
-  assignWorktreeParent: (worktreeId: string, args: { parentWorktreeId: string }) => Promise<void>
+  parent: WorktreeParentAssignment
+  assignWorktreeParent: (worktreeId: string, args: WorktreeParentAssignment) => Promise<void>
   close: () => void
   showError: (message: string) => void
 }
 
 type WorktreeParentPickerKeyboardArgs = {
   event: React.KeyboardEvent<HTMLInputElement>
-  candidates: readonly { id: string }[]
+  candidates: readonly WorktreeParentPickerCandidate[]
   activeIndex: number
   moveHighlight: (index: number) => void
-  selectParent: (worktreeId: string) => void
+  selectParent: (candidate: WorktreeParentPickerCandidate) => void
 }
 
 function getAnchorRect(anchorElement: HTMLElement | null): AnchorRect | null {
@@ -75,9 +77,17 @@ export function getWorktreeParentPickerFocusRestoreTarget(
   return anchorElement.closest<HTMLElement>(FOCUSABLE_ANCHOR_SELECTOR)
 }
 
+export function toWorktreeParentAssignment(
+  candidate: WorktreeParentPickerCandidate
+): WorktreeParentAssignment {
+  return candidate.kind === 'folder'
+    ? { parentFolderWorkspaceId: candidate.folder.id }
+    : { parentWorktreeId: candidate.worktree.id }
+}
+
 export function selectWorktreeParent({
   childWorktreeId,
-  parentWorktreeId,
+  parent,
   assignWorktreeParent,
   close,
   showError
@@ -86,7 +96,7 @@ export function selectWorktreeParent({
     return
   }
   close()
-  void assignWorktreeParent(childWorktreeId, { parentWorktreeId }).catch((error) => {
+  void assignWorktreeParent(childWorktreeId, parent).catch((error) => {
     console.error('Failed to set parent worktree:', error)
     showError(
       translate(
@@ -125,7 +135,7 @@ export function handleWorktreeParentPickerKeyDown({
     if (candidate) {
       event.preventDefault()
       event.stopPropagation()
-      selectParent(candidate.id)
+      selectParent(candidate)
     }
   }
 }
@@ -141,6 +151,9 @@ export function WorktreeParentPickerPopover({
   const repoMap = useRepoMap()
   const activeWorktreeId = useAppStore((s) => s.activeWorktreeId)
   const lineageById = useAppStore((s) => s.worktreeLineageById)
+  const workspaceLineageByChildKey = useAppStore((s) => s.workspaceLineageByChildKey)
+  const folderWorkspaces = useAppStore((s) => s.folderWorkspaces)
+  const projectGroups = useAppStore((s) => s.projectGroups)
   const assignWorktreeParent = useAppStore((s) => s.assignWorktreeParent)
   const suppressInitialOutsideCloseRef = useRef(false)
   const listRef = useRef<HTMLDivElement>(null)
@@ -166,6 +179,20 @@ export function WorktreeParentPickerPopover({
         : [],
     [child, lineageById, repoMap, worktreeMap, worktrees]
   )
+  const folderCandidates = useMemo(
+    () =>
+      child
+        ? getEligibleFolderParents({
+            child,
+            folderWorkspaces,
+            projectGroups,
+            workspaceLineageByChildKey,
+            repoMap
+          })
+        : [],
+    [child, folderWorkspaces, projectGroups, repoMap, workspaceLineageByChildKey]
+  )
+  const candidateCount = folderCandidates.length + candidates.length
 
   useLayoutEffect(() => {
     if (!open) {
@@ -199,10 +226,10 @@ export function WorktreeParentPickerPopover({
   }, [open])
 
   const handleSelect = useCallback(
-    (parentWorktreeId: string) => {
+    (candidate: WorktreeParentPickerCandidate) => {
       selectWorktreeParent({
         childWorktreeId,
-        parentWorktreeId,
+        parent: toWorktreeParentAssignment(candidate),
         assignWorktreeParent,
         close: () => onOpenChange(false),
         showError: toast.error
@@ -223,16 +250,16 @@ export function WorktreeParentPickerPopover({
       anchorRect.top,
       // Why: measured from the full candidate list, not the filtered one, so
       // the popover does not jump around while the user types.
-      estimateWorktreeParentPickerHeight(candidates.length),
+      estimateWorktreeParentPickerHeight(candidateCount),
       viewportHeight
     )
     const rect = new DOMRect(anchorRect.left, top, anchorRect.width, anchorRect.height)
     return { current: { getBoundingClientRect: () => rect } }
-  }, [anchorRect, candidates.length, viewportHeight])
+  }, [anchorRect, candidateCount, viewportHeight])
 
   const filtered = useMemo(
-    () => filterWorktreeParentCandidates(candidates, search),
-    [candidates, search]
+    () => filterParentPickerCandidates(folderCandidates, candidates, search),
+    [candidates, folderCandidates, search]
   )
   const activeIndex = clampWorktreeParentPickerIndex(highlightedIndex, filtered.length)
 
@@ -262,8 +289,8 @@ export function WorktreeParentPickerPopover({
   const visibleWorktreeIds = useMemo(
     () =>
       virtualRows
-        .map((row) => filtered[row.index]?.id)
-        .filter((id): id is string => id !== undefined),
+        .map((row) => filtered[row.index])
+        .flatMap((candidate) => (candidate?.kind === 'worktree' ? [candidate.id] : [])),
     [filtered, virtualRows]
   )
   const statuses = useWorktreeActivityStatuses(visibleWorktreeIds)
@@ -357,7 +384,7 @@ export function WorktreeParentPickerPopover({
             wrapperClassName="shrink-0"
             placeholder={translate(
               'auto.components.sidebar.WorktreeParentPickerPopover.searchPlaceholder',
-              'Search worktrees...'
+              'Search folders and worktrees...'
             )}
           />
           <CommandList ref={listRef} className="max-h-72 min-h-0 flex-1">
@@ -365,7 +392,7 @@ export function WorktreeParentPickerPopover({
               <div className="py-6 text-center text-sm text-muted-foreground">
                 {translate(
                   'auto.components.sidebar.WorktreeParentPickerPopover.empty',
-                  'No matching eligible worktrees.'
+                  'No matching folders or worktrees.'
                 )}
               </div>
             ) : (
@@ -392,14 +419,18 @@ export function WorktreeParentPickerPopover({
                         transform: `translateY(${virtualRow.start}px)`
                       }}
                       onPointerMove={() => setHighlightedIndex(virtualRow.index)}
-                      onClick={() => handleSelect(candidate.id)}
+                      onClick={() => handleSelect(candidate)}
                     >
-                      <WorktreeParentPickerRow
-                        candidate={candidate}
-                        repo={repoMap.get(candidate.repoId)}
-                        status={statuses.get(candidate.id) ?? 'inactive'}
-                        isCurrent={activeWorktreeId === candidate.id}
-                      />
+                      {candidate.kind === 'folder' ? (
+                        <FolderParentPickerRow folder={candidate.folder} />
+                      ) : (
+                        <WorktreeParentPickerRow
+                          candidate={candidate.worktree}
+                          repo={repoMap.get(candidate.worktree.repoId)}
+                          status={statuses.get(candidate.id) ?? 'inactive'}
+                          isCurrent={activeWorktreeId === candidate.id}
+                        />
+                      )}
                     </div>
                   )
                 })}

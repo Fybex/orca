@@ -17,6 +17,7 @@ const state = {
   workspaceStatuses: [],
   openModal: vi.fn(),
   projectGroups: [],
+  folderWorkspaces: [],
   createProjectGroup: vi.fn(),
   moveProjectToGroup: vi.fn(),
   deleteStateByWorktreeId: {},

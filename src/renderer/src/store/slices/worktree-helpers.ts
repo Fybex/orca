@@ -57,6 +57,11 @@ export {
 } from './worktree-meta-update-application'
 import type { RendererRemoveWorktreeResult } from './renderer-remove-worktree-result'
 
+/** A worktree parent, or a folder workspace that holds the worktree as a sibling of its other children. */
+export type WorktreeParentAssignment =
+  | { parentWorktreeId: string }
+  | { parentFolderWorkspaceId: string }
+
 export type WorktreeFetchOptions = {
   requireAuthoritative?: boolean
   executionHostId?: ExecutionHostId
@@ -186,7 +191,7 @@ export type WorktreeSlice = {
     worktreeId: string,
     args: { parentWorktreeId?: string; noParent?: boolean }
   ) => Promise<void>
-  assignWorktreeParent: (worktreeId: string, args: { parentWorktreeId: string }) => Promise<void>
+  assignWorktreeParent: (worktreeId: string, args: WorktreeParentAssignment) => Promise<void>
   createWorktree: (
     repoId: string,
     name: string,
