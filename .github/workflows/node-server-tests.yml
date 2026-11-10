@@ -59,8 +59,6 @@ on:
         description: Upload each lane's release slot and merge them into the orcad-template artifact
         type: boolean
         default: false
-  schedule:
-    - cron: '30 11 * * *'
 
 permissions:
   contents: read
