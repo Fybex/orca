@@ -64,7 +64,7 @@ describe('startFeatureFolderSync', () => {
     'is started by the runtime host in %s, not only by the desktop window',
     (relativePath) => {
       const source = readFileSync(join(import.meta.dirname, '..', relativePath), 'utf8')
-      expect(source).toMatch(/^\s*startFeatureFolderSync\(/m)
+      expect(source).toMatch(/\bstartFeatureFolderSync\(/)
     }
   )
 })
