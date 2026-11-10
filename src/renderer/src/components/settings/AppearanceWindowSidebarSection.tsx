@@ -24,10 +24,10 @@ import { USAGE_PERCENTAGE_DISPLAY_SETTING_ID } from './appearance-usage-percenta
 import { LeftSidebarAppearanceSetting } from './LeftSidebarAppearanceSetting'
 import { ShowActivityButtonSetting } from './ShowActivityButtonSetting'
 import { AttachedWorktreeReviewSetting } from './AttachedWorktreeReviewSetting'
+import { QuietProjectGroupsSetting } from './QuietProjectGroupsSetting'
 import {
   getLeftSidebarAppearanceEntry,
   getShowPinnedWorktreesInGroupsEntry,
-  getQuietProjectGroupsEntry,
   getWorkspaceCardLayoutEntry
 } from './appearance-sidebar-search'
 import { translate } from '@/i18n/i18n'
@@ -348,22 +348,7 @@ export function AppearanceWindowSidebarSection({
                     />
                   </SearchableSetting>
 
-                  <SearchableSetting
-                    title={getQuietProjectGroupsEntry().title}
-                    description={getQuietProjectGroupsEntry().description}
-                    keywords={getQuietProjectGroupsEntry().keywords}
-                  >
-                    <SettingsSwitchRow
-                      label={getQuietProjectGroupsEntry().title}
-                      description={getQuietProjectGroupsEntry().description}
-                      checked={settings.quietProjectGroups !== false}
-                      onChange={() =>
-                        updateSettings({
-                          quietProjectGroups: settings.quietProjectGroups === false
-                        })
-                      }
-                    />
-                  </SearchableSetting>
+                  <QuietProjectGroupsSetting settings={settings} updateSettings={updateSettings} />
                 </div>
               </div>
             ) : null}

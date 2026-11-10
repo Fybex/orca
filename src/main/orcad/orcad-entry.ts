@@ -306,9 +306,8 @@ async function startOrcadRuntime(
   })
   getAppEnvironment().onWillQuit(() => sessionSearch?.dispose())
   // Why here too: a paired client can create feature folders on this host.
-  const { startFeatureFolderSync } =
-    await import('../feature-folders/feature-folder-sync-scheduler')
-  startFeatureFolderSync(profileStore)
+  const featureFolderSync = await import('../feature-folders/feature-folder-sync-scheduler')
+  featureFolderSync.startFeatureFolderSync(profileStore)
 
   // Why: this host evaluates its own panes, so it keeps its own rules current.
   const { startAgentStateRulesLiveUpdates } =
