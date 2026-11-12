@@ -8,10 +8,10 @@ import {
   SESSION_TABS_SPLIT_GROUP_PLACEMENT_RUNTIME_CAPABILITY,
   WORKTREE_BACKGROUND_REMOVAL_RUNTIME_CAPABILITY,
   WORKTREE_GITHUB_PR_SUPPRESSION_RUNTIME_CAPABILITY,
-  WORKTREE_GITLAB_MR_SUPPRESSION_RUNTIME_CAPABILITY,
   WORKTREE_VISIBILITY_DEFAULTS_RUNTIME_CAPABILITY,
   WORKTREE_VISIBILITY_SOURCE_DEFAULTS_RUNTIME_CAPABILITY
 } from '../../../shared/protocol-version'
+import { WORKTREE_GITLAB_MR_SUPPRESSION_RUNTIME_CAPABILITY } from '../../../shared/worktree-review-suppression-capabilities'
 import { AGENT_SESSION_BACKGROUND_TASK_CHILD_VIEWS_CAPABILITY } from '../../../shared/agent-session-background-task-child-views-capability'
 
 /** What the browser client advertises in its handshake with the host it is paired to. */

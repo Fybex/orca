@@ -410,7 +410,8 @@ it('keeps every platform job and runs them when detection is skipped or fails', 
   expect(detect.run).toContain('git diff --name-only --no-renames -z "$PUSH_BASE" HEAD')
   expect(detect.run).toContain('node-server-changes" --defer-graph --full-qualification')
   expect(workflow.on.pull_request.types).toContain('ready_for_review')
-  expect(workflow.on.schedule).toHaveLength(1)
+  // Fork: scheduled runs are dropped so upstream crons do not fire against the fork.
+  expect(workflow.on.schedule).toBeUndefined()
   // A pull request may qualify one platform, so the merged commit must re-qualify all six.
   expect(workflow.on.push.branches).toEqual(['main'])
   expect(workflow.on.push.paths).toEqual(workflow.on.pull_request.paths)

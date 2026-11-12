@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest'
 import {
   NATIVE_REMOTE_RUNTIME_CLIENT_CAPABILITIES,
   RUNTIME_CAPABILITIES,
-  WORKTREE_GITHUB_PR_SUPPRESSION_RUNTIME_CAPABILITY,
-  WORKTREE_GITLAB_MR_SUPPRESSION_RUNTIME_CAPABILITY
+  WORKTREE_GITHUB_PR_SUPPRESSION_RUNTIME_CAPABILITY
 } from '../protocol-version'
+import { WORKTREE_GITLAB_MR_SUPPRESSION_RUNTIME_CAPABILITY } from '../worktree-review-suppression-capabilities'
 import { remoteRuntimeClientCapabilities } from '../remote-runtime-client-capabilities'
 import {
   isGitHubPRSuppressed,

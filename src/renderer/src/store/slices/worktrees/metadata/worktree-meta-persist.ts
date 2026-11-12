@@ -11,9 +11,9 @@ import {
 import {
   TASK_SOURCE_CONTEXT_RUNTIME_CAPABILITY,
   WORKTREE_GITHUB_PR_SUPPRESSION_RUNTIME_CAPABILITY,
-  WORKTREE_GITLAB_MR_SUPPRESSION_RUNTIME_CAPABILITY,
   WORKTREE_LINKED_WORK_ITEM_CONTEXT_RUNTIME_CAPABILITY
 } from '../../../../../../shared/protocol-version'
+import { WORKTREE_GITLAB_MR_SUPPRESSION_RUNTIME_CAPABILITY } from '../../../../../../shared/worktree-review-suppression-capabilities'
 import { toRuntimeWorktreeSelector } from '../../../../runtime/runtime-worktree-selector'
 import { translate } from '@/i18n/i18n'
 import type { AppState } from '../../../types'
